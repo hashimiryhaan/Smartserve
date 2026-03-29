@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartServe | Donor Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: #5D54B1;
+            --brand-light: #7E74D1;
+            --accent: #BC8FA0;
+            --bg-gradient: linear-gradient(135deg, #f8f9ff 0%, #fcfaff 100%);
+            --white: #ffffff;
+            --text-dark: #1A1C1E;
+            --text-muted: #71717A;
+            --glass: rgba(255, 255, 255, 0.85);
+            --shadow-premium: 0 15px 35px rgba(93, 84, 177, 0.08);
+            --radius-xl: 24px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg-gradient);
+            color: var(--text-dark);
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+
+        nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 6%;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(233, 236, 239, 0.5);
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 20px; }
+        .back-home {
+            text-decoration: none; color: var(--text-dark); font-weight: 700;
+            font-size: 13px; display: flex; align-items: center; gap: 8px;
+            padding: 8px 16px; border-radius: 12px; transition: 0.3s;
+        }
+        .back-home:hover { background: rgba(93, 84, 177, 0.1); color: var(--brand-primary); }
+        .logo { font-size: 22px; font-weight: 800; letter-spacing: -1px; }
+        .logo span { color: var(--brand-primary); }
+
+        .search-container { flex: 0 1 400px; position: relative; }
+        .search-bar {
+            width: 100%; padding: 12px 20px 12px 45px;
+            border-radius: 14px; border: 1px solid #E4E4E7;
+            background: #F4F4F5; font-weight: 500; outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .stats-bar { padding: 40px 6% 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+        .stat-card { background: white; padding: 25px; border-radius: 20px; box-shadow: var(--shadow-premium); border: 1px solid rgba(255,255,255,0.6); }
+        .stat-card p { font-size: 11px; font-weight: 800; color: var(--text-muted); margin-bottom: 5px; }
+        .stat-card h2 { font-size: 28px; font-weight: 800; }
+
+        .hero-banner { padding: 40px 6% 20px; display: flex; justify-content: space-between; align-items: center; }
+        .hero-text h1 { font-size: 38px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+        
+        .add-card-btn {
+            background: var(--brand-primary); color: white; border: none;
+            padding: 16px 32px; border-radius: 16px; font-weight: 700;
+            cursor: pointer; box-shadow: 0 10px 25px rgba(93, 84, 177, 0.25);
+            transition: 0.3s;
+        }
+        .add-card-btn:hover { transform: translateY(-3px); }
+
+        /* USER MENU STYLES */
+        .user-pill {
+            display: flex; align-items: center; gap: 10px;
+            padding: 5px 12px 5px 6px; background: #fff;
+            border-radius: 50px; border: 1px solid #E4E4E7;
+            cursor: pointer;
+        }
+        .avatar-small { 
+            width: 32px; height: 32px; border-radius: 50%; background: var(--brand-primary);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 14px;
+        }
+
+        /* CLAIMS TABLE STYLES */
+        .claims-section { padding: 0 6% 20px; }
+        .claims-table-container { 
+            background: white; border-radius: 20px; overflow: hidden; 
+            box-shadow: var(--shadow-premium); border: 1px solid rgba(255,255,255,0.6); 
+        }
+        .claims-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .claims-table th { padding: 15px 20px; background: #f8f9ff; font-size: 11px; font-weight: 800; color: var(--text-muted); }
+        .claims-table td { padding: 15px 20px; border-bottom: 1px solid #f4f4f5; }
+
+        .grid-container { padding: 20px 6% 60px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 35px; }
+        
+        .food-card {
+            background: var(--white); border-radius: var(--radius-xl);
+            overflow: hidden; box-shadow: var(--shadow-premium);
+            transition: all 0.4s ease; border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .img-box { height: 200px; position: relative; background: #eee; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .status-tag {
+            position: absolute; top: 15px; right: 15px;
+            background: #22C55E; color: white; padding: 4px 12px;
+            border-radius: 20px; font-size: 10px; font-weight: 800;
+        }
+
+        .card-info { padding: 20px; }
+        .card-cat { color: var(--brand-primary); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .card-title { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+        
+        .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F4F4F5; padding-top: 12px; }
+        .price-tag { font-size: 20px; font-weight: 800; }
+        .old-price { text-decoration: line-through; color: var(--text-muted); font-size: 14px; margin-right: 8px; }
+
+        .icon-btn { 
+            width: 38px; height: 38px; border-radius: 10px; border: 1px solid #E4E4E7;
+            background: white; cursor: pointer; transition: 0.2s; font-size: 16px;
+        }
+        .icon-btn:hover { background: #F4F4F5; }
+
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px); z-index: 2000;
+            display: none; justify-content: flex-end;
+        }
+        .overlay.active { display: flex; }
+        .side-panel { width: 100%; max-width: 500px; background: #fff; height: 100%; padding: 40px; overflow-y: auto; }
+        .form-label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; color: #666; margin-top: 20px;}
+        .form-input { width: 100%; border: none; border-bottom: 2px solid #E4E4E7; padding: 10px 0; font-size: 16px; font-weight: 600; outline: none; }
+        .form-input:focus { border-color: var(--brand-primary); }
+        .chip-group { display: flex; gap: 10px; margin-top: 10px; }
+        .chip { border: 1.5px solid #E4E4E7; padding: 6px 15px; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer; }
+        .chip.active { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); }
+        .submit-btn { width: 100%; background: var(--brand-primary); color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-left">
+            <a href="index.html" class="back-home">← BACK</a>
+            <div class="logo">SMART<span>SERVE</span></div>
+        </div>
+        <div class="search-container">
+            <input type="text" class="search-bar" placeholder="Search your listings..." oninput="handleSearch(this.value)">
+        </div>
+        <div class="nav-right" style="display:flex; gap:12px; align-items:center;">
+            <button class="icon-btn">🔔</button>
+            <div class="user-pill" onclick="window.location.href='index.html'">
+                <div class="avatar-small" id="headerAvatar">U</div>
+                <span id="userNameHeader" style="font-size: 13px; font-weight: 700;">User</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="stats-bar">
+        <div class="stat-card">
+            <p>ACTIVE LISTINGS</p>
+            <h2 id="activeCount" style="color: var(--brand-primary);">0</h2>
+        </div>
+        <div class="stat-card">
+            <p>MEALS SAVED</p>
+            <h2 id="mealsCount" style="color: #22C55E;">0</h2>
+        </div>
+        <div class="stat-card">
+            <p>TOTAL REVENUE (₹)</p>
+            <h2 id="revenueCount" style="color: var(--accent);">0</h2>
+        </div>
+    </div>
+
+    <section class="hero-banner" style="margin-top: 30px; padding-bottom: 5px;">
+        <div class="hero-text">
+            <h1 style="font-size: 28px;">Pending Pickups</h1>
+            <p>Confirm the 4-digit OTP shown in the database</p>
+        </div>
+    </section>
+
+    <div class="claims-section">
+        <div class="claims-table-container">
+            <table class="claims-table">
+                <thead>
+                    <tr>
+                        <th>CLAIM ID</th>
+                        <th>ITEM TITLE</th>
+                        <th>CLAIMED AT</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="claimsList">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <section class="hero-banner">
+        <div class="hero-text">
+            <h1>Donor Dashboard</h1>
+            <p>Manage your surplus food contributions</p>
+        </div>
+        <button class="add-card-btn" onclick="openForm()">+ DONATE FOOD</button>
+    </section>
+
+    <div class="grid-container" id="listingGrid"></div>
+
+    <div class="overlay" id="formOverlay">
+        <div class="side-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 id="panelTitle" style="font-size:24px; font-weight:800;">New Listing</h2>
+                <div style="cursor:pointer; font-size:24px;" onclick="toggleForm(false)">✕</div>
+            </div>
+            <input type="hidden" id="editId">
+            <label class="form-label">Food Photo</label>
+            <input type="file" id="foodFile" class="form-input" accept="image/*">
+            <label class="form-label">Item Name</label>
+            <input type="text" id="foodName" class="form-input">
+            <label class="form-label">Category</label>
+            <div class="chip-group">
+                <div class="chip" id="chip-Wedding" onclick="selectChip(this, 'Wedding')">Wedding</div>
+                <div class="chip active" id="chip-Restaurant" onclick="selectChip(this, 'Restaurant')">Restaurant</div>
+                <div class="chip" id="chip-Individual" onclick="selectChip(this, 'Individual')">Individual</div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div><label class="form-label">Quantity</label><input type="text" id="qty" class="form-input"></div>
+                <div><label class="form-label">Pickup Time</label><input type="text" id="pickupTime" class="form-input"></div>
+            </div>
+            <label class="form-label">Pickup Address</label>
+            <input type="text" id="loc" class="form-input">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div><label class="form-label">Original Price (₹)</label><input type="number" id="originalPrice" class="form-input"></div>
+                <div><label class="form-label">Offer Price (₹)</label><input type="number" id="discountedPrice" class="form-input"></div>
+            </div>
+            <button class="submit-btn" id="saveBtn" onclick="saveData()">PUBLISH NOW</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8080/api/food";
+        const CLAIM_API = "http://localhost:8080/api/claims";
+        let currentCategory = "Restaurant";
+        let allItems = [];
+        let savedUserId = null;
+
+        // NEW: Initialise user profile from storage
+        function initUser() {
+            const sid = localStorage.getItem('ss_id');
+            const sname = localStorage.getItem('ss_name');
+            const semail = localStorage.getItem('ss_email');
+
+            if (!sid) {
+                alert("Please log in to access the Donor Dashboard.");
+                window.location.href = "index.html";
+                return;
+            }
+
+            savedUserId = sid;
+            const displayName = sname || semail.split('@')[0];
+            const initial = displayName.charAt(0).toUpperCase();
+
+            // Apply to UI
+            document.getElementById('userNameHeader').innerText = displayName;
+            const av = document.getElementById('headerAvatar');
+            av.innerText = initial;
+            
+            // Generate matching color logic
+            const colors = ['#5D54B1', '#4ECDC4', '#45B7D1', '#96CEB4', '#D4A5A5', '#9B59B6'];
+            av.style.backgroundColor = colors[displayName.length % colors.length];
+
+            // Auto-fill address if available
+            const saddr = localStorage.getItem('ss_addr');
+            if(saddr) document.getElementById('loc').value = saddr;
+        }
+
+        function toggleForm(show) {
+            document.getElementById('formOverlay').classList.toggle('active', show);
+            if(!show) resetForm();
+        }
+
+        function openForm() {
+            resetForm();
+            document.getElementById('panelTitle').innerText = "New Listing";
+            document.getElementById('saveBtn').innerText = "PUBLISH NOW";
+            toggleForm(true);
+        }
+
+        function resetForm() {
+            document.getElementById('editId').value = "";
+            document.getElementById('foodName').value = "";
+            document.getElementById('qty').value = "";
+            document.getElementById('pickupTime').value = "";
+            // Keep the address saved if they have one
+            document.getElementById('loc').value = localStorage.getItem('ss_addr') || "";
+            document.getElementById('originalPrice').value = "";
+            document.getElementById('discountedPrice').value = "";
+            document.getElementById('foodFile').value = "";
+        }
+
+        function selectChip(el, val) {
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            currentCategory = val;
+        }
+
+        async function loadData() {
+            try {
+                // 1. Load Listings
+                const res = await fetch(API_BASE);
+                allItems = await res.json();
+                updateStats(allItems);
+                renderItems(allItems);
+
+                // 2. Load Pending Claims
+                const claimRes = await fetch(`${CLAIM_API}/pending`);
+                const claims = await claimRes.json();
+                renderPendingClaims(claims);
+
+            } catch (e) { console.error("Load failed", e); }
+        }
+
+        function renderPendingClaims(claims) {
+            const list = document.getElementById('claimsList');
+            const pending = claims.filter(c => c.status === 'PENDING');
+            
+            if (pending.length === 0) {
+                list.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:#999;">No pickups scheduled.</td></tr>`;
+                return;
+            }
+
+            list.innerHTML = pending.map(c => `
+                <tr>
+                    <td style="font-weight:800;">#${c.id}</td>
+                    <td style="font-weight:600;">${c.food ? c.food.title : 'Food Item'}</td>
+                    <td style="color:#666; font-size:13px;">${c.claimedat || 'N/A'}</td>
+                    <td>
+                        <button onclick="verifyClaim(${c.id})" 
+                                style="background:var(--brand-primary); color:white; border:none; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:700; font-size:11px;">
+                            CONFIRM OTP
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function verifyClaim(id) {
+            const otp = prompt("Customer is showing OTP. Please verify:");
+            if (!otp) return;
+
+            try {
+                const res = await fetch(`${CLAIM_API}/${id}/verify?otp=${otp}`, { method: 'POST' });
+                if (res.ok) {
+                    alert("✅ Success! OTP verified and food marked as delivered.");
+                    loadData(); 
+                } else {
+                    alert("❌ Incorrect OTP. Please check again.");
+                }
+            } catch (e) { alert("Server error."); }
+        }
+
+        function updateStats(items) {
+            document.getElementById('activeCount').innerText = items.length;
+            const revenue = items.reduce((sum, i) => sum + (parseFloat(i.discountedPrice) || 0), 0);
+            document.getElementById('revenueCount').innerText = revenue.toLocaleString();
+            document.getElementById('mealsCount').innerText = items.length * 5; 
+        }
+
+        function renderItems(items) {
+            const grid = document.getElementById('listingGrid');
+            grid.innerHTML = items.map(item => {
+                let rawImageUrl = item.imageUrl || '';
+                let finalFullUrl = '';
+                if (rawImageUrl) {
+                    if (rawImageUrl.startsWith('http')) finalFullUrl = rawImageUrl;
+                    else if (rawImageUrl.startsWith('/uploads/')) finalFullUrl = `http://localhost:8080${rawImageUrl}`;
+                    else finalFullUrl = `http://localhost:8080/uploads/${rawImageUrl}`;
+                }
+
+                return `
+                <div class="food-card">
+                    <div class="img-box">
+                        <span class="status-tag">${item.status || 'AVAILABLE'}</span>
+                        <img src="${finalFullUrl}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'" alt="food">
+                    </div>
+                    <div class="card-info">
+                        <div class="card-cat">${item.category ? item.category.name : 'RESTAURANT'} • ${item.pickupTime || ''}</div>
+                        <h3 class="card-title">${item.title}</h3>
+                        <div class="card-footer">
+                            <div>
+                                <span class="old-price">₹${item.originalPrice}</span>
+                                <span class="price-tag">₹${item.discountedPrice}</span>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <button class="icon-btn" onclick="editItem(${item.id})">✏️</button>
+                                <button class="icon-btn" onclick="deleteItem(${item.id})">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function editItem(id) {
+            const item = allItems.find(i => i.id === id);
+            if(!item) return;
+            document.getElementById('panelTitle').innerText = "Edit Listing";
+            document.getElementById('saveBtn').innerText = "UPDATE CHANGES";
+            document.getElementById('editId').value = item.id;
+            document.getElementById('foodName').value = item.title;
+            document.getElementById('qty').value = item.quantity;
+            document.getElementById('pickupTime').value = item.pickupTime;
+            document.getElementById('loc').value = item.addressText;
+            document.getElementById('originalPrice').value = item.originalPrice;
+            document.getElementById('discountedPrice').value = item.discountedPrice;
+            toggleForm(true);
+        }
+
+        async function saveData() {
+            const editId = document.getElementById('editId').value;
+            const fileInput = document.getElementById('foodFile');
+            if (!editId && fileInput.files.length === 0) return alert("Please upload a photo");
+
+            const formData = new FormData();
+            const foodData = {
+                title: document.getElementById('foodName').value,
+                quantity: document.getElementById('qty').value,
+                pickupTime: document.getElementById('pickupTime').value,
+                addressText: document.getElementById('loc').value,
+                originalPrice: document.getElementById('originalPrice').value,
+                discountedPrice: document.getElementById('discountedPrice').value,
+                category: { id: currentCategory === 'Wedding' ? 1 : 2 },
+                donor: { id: savedUserId } // DYNAMIC: Uses the logged-in user
+            };
+
+            if(editId) foodData.id = editId;
+            if(fileInput.files[0]) formData.append("file", fileInput.files[0]);
+            formData.append("data", new Blob([JSON.stringify(foodData)], { type: "application/json" }));
+
+            try {
+                const url = editId ? `${API_BASE}/update` : `${API_BASE}/add`;
+                const res = await fetch(url, { method: editId ? 'PUT' : 'POST', body: formData });
+                if (res.ok) { toggleForm(false); loadData(); }
+            } catch (e) { alert("Action failed."); }
+        }
+
+        async function deleteItem(id) {
+            if(!confirm("Remove listing?")) return;
+            await fetch(`${API_BASE}/delete/${id}`, { method: 'DELETE' });
+            loadData();
+        }
+
+        function handleSearch(query) {
+            const filtered = allItems.filter(i => i.title.toLowerCase().includes(query.toLowerCase()));
+            renderItems(filtered);
+        }
+
+        window.onload = function() {
+            initUser();
+            loadData();
+        };
+    </script>
+</body>
+</html>
