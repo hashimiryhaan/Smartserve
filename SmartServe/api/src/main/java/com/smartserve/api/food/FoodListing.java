@@ -25,7 +25,8 @@ public class FoodListing {
 
     private String description; 
 
-    private String quantity;
+    @Column(nullable = false)
+    private Integer quantity;
 
     @ManyToOne
     @JoinColumn(name = "categoryid") 

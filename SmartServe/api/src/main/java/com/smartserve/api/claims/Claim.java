@@ -51,4 +51,6 @@ public class Claim {
     public enum ClaimStatus {
         PENDING, VERIFIED, CANCELLED
     }
+    @Column(name = "claimed_quantity")
+    private Integer claimedQuantity;
 }

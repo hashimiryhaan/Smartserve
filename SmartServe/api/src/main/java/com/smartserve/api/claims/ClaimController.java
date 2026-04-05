@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/claims")
-@CrossOrigin(origins = "*") 
+@CrossOrigin(origins = "*") // Allows your frontend on port 5500 to talk to port 8080
 public class ClaimController {
 
     @Autowired
@@ -30,34 +30,34 @@ public class ClaimController {
     private UserRepository userRepository;
 
     /**
-     * 1. Place a Claim
-     * Updated to handle the Charity Connection detection.
+     * 1. Place a Claim (UPDATED FOR JSON PAYLOAD)
+     * We now use @RequestBody so Spring Boot reads the JSON payload sent from item-details.html
      */
     @PostMapping("/add")
-    public ResponseEntity<Claim> placeClaim(@RequestParam Integer foodId, @RequestParam Integer claimantId) {
-        FoodListing food = foodListingRepository.findById(foodId)
-                .orElseThrow(() -> new RuntimeException("Food listing not found"));
-        
-        User claimant = userRepository.findById(claimantId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<?> placeClaim(@RequestBody Claim claimRequest) {
+        try {
+            // We need to fetch the User to grab their Role and Name for your Charity tracking
+            if (claimRequest.getClaimant() != null && claimRequest.getClaimant().getId() != null) {
+                User claimant = userRepository.findById(claimRequest.getClaimant().getId())
+                        .orElseThrow(() -> new RuntimeException("User not found"));
+                
+                claimRequest.setClaimerType(claimant.getRole() != null ? claimant.getRole().name() : "USER");
+                claimRequest.setClaimerName(claimant.getName());
+            }
 
-        Claim claimRequest = new Claim();
-        claimRequest.setFood(food); 
-        claimRequest.setClaimant(claimant);
-
-        // NEW: Integrate Charity Connection Logic
-        // We set the type based on the User's role (ensure your User entity has a role field)
-        // Replace the old line 50 with this:
-        claimRequest.setClaimerType(claimant.getRole() != null ? claimant.getRole().name() : "USER");
-        claimRequest.setClaimerName(claimant.getName());
-
-        Claim savedClaim = claimService.createClaim(claimRequest);
-        return ResponseEntity.ok(savedClaim);
+            // claimRequest now automatically contains the 'claimedQuantity' from the frontend!
+            Claim savedClaim = claimService.createClaim(claimRequest);
+            
+            return ResponseEntity.ok(savedClaim);
+            
+        } catch (Exception e) {
+            // Return a clean error message to the frontend if something fails (like not enough food)
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 
     /**
      * 2. Verify OTP
-     * Used by the Donor Dashboard to complete a rescue.
      */
     @PostMapping("/{id}/verify")
     public ResponseEntity<?> verify(@PathVariable Integer id, @RequestParam String otp) {
@@ -70,19 +70,16 @@ public class ClaimController {
     }
 
     /**
-     * 3. Get User Claim History (FOR HISTORY PAGE)
-     * Fetches all rescues made by a specific user using the repository query.
+     * 3. Get User Claim History
      */
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Claim>> getUserClaims(@PathVariable Integer userId) {
-        // Optimized: uses the repository method we refined earlier
         List<Claim> userHistory = claimRepository.findByClaimantIdOrderByIdDesc(userId);
         return ResponseEntity.ok(userHistory);
     }
 
     /**
      * 4. Get Pending Pickups
-     * Fetches only active claims that haven't been picked up yet.
      */
     @GetMapping("/pending")
     public List<Claim> getPendingClaims() {
@@ -93,7 +90,7 @@ public class ClaimController {
 
     /**
      * 5. Cancel a Claim
-     * Changes status to CANCELLED and returns food quantity to the listing.
+     * Fixed to return the exact quantity requested, rather than just 1.
      */
     @PostMapping("/cancel/{id}")
     @Transactional
@@ -101,16 +98,21 @@ public class ClaimController {
         Claim claim = claimRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Claim not found"));
 
-        // Only PENDING claims can be cancelled
         if (claim.getStatus() == Claim.ClaimStatus.PENDING) {
-            // 1. Update Status
             claim.setStatus(Claim.ClaimStatus.CANCELLED);
             claimRepository.save(claim);
 
-            // 2. Increment Food Quantity back
             FoodListing food = claim.getFood();
             if (food != null) {
-                food.setQuantity(food.getQuantity() + 1);
+                // Restore the exact amount that was booked
+                int qtyToRestore = claim.getClaimedQuantity() != null ? claim.getClaimedQuantity() : 1;
+                food.setQuantity(food.getQuantity() + qtyToRestore);
+                
+                // If the item was hidden because it hit 0, make it available again
+                if (food.getStatus() == FoodListing.ListingStatus.CLAIMED) {
+                    food.setStatus(FoodListing.ListingStatus.AVAILABLE);
+                }
+                
                 foodListingRepository.save(food);
             }
 
@@ -119,6 +121,7 @@ public class ClaimController {
             return ResponseEntity.badRequest().body(Map.of("message", "Cannot cancel a claim that is already verified or cancelled."));
         }
     }
+
     @GetMapping
     public ResponseEntity<List<Claim>> getAllClaims() {
         try {
@@ -127,5 +130,4 @@ public class ClaimController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
 }
