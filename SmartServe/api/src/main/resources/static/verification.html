@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartServe | Secure Handshake</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: #5D54B1; /* Donor/Standard Theme */
+            --charity-blue: #2D63ED;  /* Charity Theme */
+            --bg-light: #F8FAFC;
+            --text-dark: #1A1C1E;
+            --success: #22C55E;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-light);
+            margin: 0; display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        /* Dynamic Theme Support */
+        body.charity-mode { --brand-primary: var(--charity-blue); }
+
+        nav {
+            padding: 20px 6%;
+            background: white;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .logo { font-size: 22px; font-weight: 800; text-decoration: none; color: var(--text-dark); }
+        .logo span { color: var(--brand-primary); }
+
+        .handshake-container {
+            flex: 1; display: flex; justify-content: center; align-items: center; padding: 40px 20px;
+        }
+
+        .handshake-card {
+            background: white; width: 100%; max-width: 450px;
+            padding: 40px; border-radius: 32px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+            text-align: center; border: 1px solid #F1F5F9;
+        }
+
+        .status-icon {
+            width: 80px; height: 80px; background: #EEF2FF;
+            color: var(--brand-primary); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; margin: 0 auto 24px;
+        }
+
+        h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+        p { color: #64748B; font-size: 15px; line-height: 1.6; margin-bottom: 32px; }
+
+        .item-summary {
+            background: #F8FAFC; padding: 20px; border-radius: 20px;
+            margin-bottom: 32px; text-align: left; border: 1px solid #E2E8F0;
+        }
+        .item-summary-label { font-size: 11px; font-weight: 800; color: #94A3B8; text-transform: uppercase; }
+        .item-summary-value { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-top: 4px; }
+
+        /* OTP Input Styling */
+        .otp-group { display: flex; gap: 12px; justify-content: center; margin-bottom: 32px; }
+        .otp-input {
+            width: 60px; height: 70px; border: 2px solid #E2E8F0;
+            border-radius: 16px; text-align: center; font-size: 28px;
+            font-weight: 800; color: var(--brand-primary); transition: 0.3s;
+            outline: none; background: #fff;
+        }
+        .otp-input:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 4px rgba(45, 99, 237, 0.1); }
+
+        .verify-btn {
+            width: 100%; padding: 18px; background: var(--brand-primary);
+            color: white; border: none; border-radius: 18px;
+            font-size: 16px; font-weight: 800; cursor: pointer;
+            transition: 0.3s; box-shadow: 0 10px 20px rgba(45, 99, 237, 0.2);
+        }
+        .verify-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .verify-btn:disabled { background: #CBD5E1; box-shadow: none; cursor: not-allowed; }
+
+        .cancel-link {
+            display: inline-block; margin-top: 24px; color: #94A3B8;
+            font-weight: 700; font-size: 13px; text-decoration: none; transition: 0.2s;
+        }
+        .cancel-link:hover { color: var(--brand-primary); }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">smart<span>serve</span></a>
+        <div id="userPill" style="font-size: 13px; font-weight: 700; color: #64748B;">Handshake Portal</div>
+    </nav>
+
+    <main class="handshake-container">
+        <div class="handshake-card">
+            <div class="status-icon" id="modeIcon">🤝</div>
+            <h1 id="handshakeTitle">Secure Handshake</h1>
+            <p id="handshakeSubtext">Enter the 4-digit code provided by the donor to complete the rescue.</p>
+
+            <div class="item-summary">
+                <div style="margin-bottom: 12px;">
+                    <span class="item-summary-label">Rescue Item</span>
+                    <div class="item-summary-value" id="itemName">Loading...</div>
+                </div>
+                <div>
+                    <span class="item-summary-label">Donor Location</span>
+                    <div class="item-summary-value" id="itemLoc">Fetching address...</div>
+                </div>
+            </div>
+
+            <div class="otp-group" id="otpContainer">
+                <input type="text" maxlength="1" class="otp-input" autofocus>
+                <input type="text" maxlength="1" class="otp-input">
+                <input type="text" maxlength="1" class="otp-input">
+                <input type="text" maxlength="1" class="otp-input">
+            </div>
+
+            <button class="verify-btn" id="verifyBtn" onclick="submitVerification()">COMPLETE PICKUP</button>
+            
+            <a href="history.html" class="cancel-link">Return to Activity History</a>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = "http://localhost:8080/api/claims";
+        const FOOD_API = "http://localhost:8080/api/food";
+        const urlParams = new URLSearchParams(window.location.search);
+        const claimId = urlParams.get('id'); // Get the claim ID from URL
+
+        // 1. Initialize Page Logic
+        async function initHandshake() {
+            if (!claimId) {
+                alert("No active claim found.");
+                window.location.href = "marketplace.html";
+                return;
+            }
+
+            try {
+                // Fetch claim details to see if it's a Charity or regular user
+                const response = await fetch(`${API_BASE}/${claimId}`);
+                const claim = await response.json();
+
+                // Check if it's a Charity connection
+                if (claim.claimerType === 'CHARITY' || claim.food?.listingType === 'DONATION') {
+                    document.body.classList.add('charity-mode');
+                    document.getElementById('handshakeTitle').innerText = "Charity Handshake";
+                    document.getElementById('modeIcon').innerText = "🛡️";
+                }
+
+                document.getElementById('itemName').innerText = claim.food?.title || "Surplus Food";
+                document.getElementById('itemLoc').innerText = claim.food?.addressText || "Kochi, Kerala";
+
+            } catch (err) {
+                console.error("Handshake Init Failed:", err);
+                document.getElementById('itemName').innerText = "Connection Error";
+            }
+        }
+
+        // 2. Manage OTP Input Behavior (Auto-tabbing)
+        const inputs = document.querySelectorAll('.otp-input');
+        inputs.forEach((input, index) => {
+            input.addEventListener('keyup', (e) => {
+                if (e.target.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+                if (e.key === "Backspace" && index > 0 && e.target.value === "") {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+
+        // 3. Submit for Verification
+        async function submitVerification() {
+            const otp = Array.from(inputs).map(i => i.value).join('');
+            if (otp.length < 4) {
+                alert("Please enter the full 4-digit code.");
+                return;
+            }
+
+            const btn = document.getElementById('verifyBtn');
+            btn.disabled = true;
+            btn.innerText = "VERIFYING...";
+
+            try {
+                // Sending OTP to Spring Boot backend
+                const response = await fetch(`${API_BASE}/${claimId}/verify?otp=${otp}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    alert("✅ Handshake Verified! Impact points added to your profile.");
+                    window.location.href = "history.html";
+                } else {
+                    alert("❌ Invalid Code. Please confirm the OTP with the donor.");
+                    btn.disabled = false;
+                    btn.innerText = "COMPLETE PICKUP";
+                    inputs.forEach(i => i.value = "");
+                    inputs[0].focus();
+                }
+            } catch (error) {
+                alert("Server error. Ensure your Spring Boot app is running.");
+                btn.disabled = false;
+            }
+        }
+
+        window.onload = initHandshake;
+    </script>
+</body>
+</html>
