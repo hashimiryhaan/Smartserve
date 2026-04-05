@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartServe | Claim Verification</title>
+    <style>
+        :root {
+            --primary-green: #2ecc71;
+            --btn-blue: #5D54B1; /* Matching your Premium Brand Color */
+            --bg-gray: #f8f9fa;
+            --text-dark: #1A1C1E;
+            --error-red: #e74c3c;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 { color: var(--text-dark); margin: 0; font-size: 28px; font-weight: 800; }
+
+        .back-btn {
+            text-decoration: none;
+            color: var(--btn-blue);
+            font-weight: 700;
+            padding: 10px 20px;
+            border: 2px solid var(--btn-blue);
+            border-radius: 12px;
+            transition: 0.3s;
+        }
+
+        .back-btn:hover { background: var(--btn-blue); color: white; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; color: #71717a; border-bottom: 2px solid #f4f4f5; }
+        td { padding: 20px 15px; border-bottom: 1px solid #f4f4f5; font-weight: 500; }
+
+        .btn-verify {
+            background: var(--btn-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        /* OTP MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .otp-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .otp-input {
+            width: 55px;
+            height: 55px;
+            border: 2px solid #e4e4e7;
+            border-radius: 16px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--btn-blue);
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .otp-input:focus { border-color: var(--btn-blue); }
+
+        /* Status colors for the inputs */
+        .otp-input.success { border-color: var(--primary-green); background: #f0fff4; }
+        .otp-input.error { border-color: var(--error-red); background: #fff5f5; }
+
+        .loader {
+            display: none;
+            margin-top: 10px;
+            color: var(--btn-blue);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Verify Claims</h1>
+        <a href="donor.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>CLAIM ID</th>
+                <th>CUSTOMER</th>
+                <th>FOOD ITEM</th>
+                <th>ACTION</th>
+            </tr>
+        </thead>
+        <tbody id="claimsList">
+            </tbody>
+    </table>
+</div>
+
+<div id="otpModal" class="modal">
+    <div class="modal-content">
+        <h2 id="m-title" style="margin-bottom: 10px;">Enter Code</h2>
+        <p id="m-sub" style="color: #71717a;">Ask the customer for their 4-digit OTP</p>
+        
+        <div class="otp-group">
+            <input type="text" maxlength="1" class="otp-input" id="o1" oninput="moveFocus(this, 'o2')">
+            <input type="text" maxlength="1" class="otp-input" id="o2" oninput="moveFocus(this, 'o3')">
+            <input type="text" maxlength="1" class="otp-input" id="o3" oninput="moveFocus(this, 'o4')">
+            <input type="text" maxlength="1" class="otp-input" id="o4" oninput="autoSubmit(this)">
+        </div>
+
+        <div id="statusMsg" class="loader">Verifying...</div>
+        
+        <button onclick="closeModal()" style="margin-top: 20px; background: none; border: none; color: #71717a; cursor: pointer; font-weight: 600;">Cancel</button>
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://localhost:8080/api/food";
+    let activeId = null;
+
+    // Load claims from backend
+    async function loadClaims() {
+        try {
+            const res = await fetch(`${API_URL}/pending-claims`);
+            const data = await res.json();
+            const list = document.getElementById('claimsList');
+            
+            list.innerHTML = data.map(c => `
+                <tr>
+                    <td>#${c.id}</td>
+                    <td>${c.claimantName || 'Arjun K.'}</td>
+                    <td>${c.title}</td>
+                    <td><button class="btn-verify" onclick="openModal(${c.id}, '${c.claimantName || 'Arjun K.'}')">Verify OTP</button></td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            // Placeholder for testing
+            document.getElementById('claimsList').innerHTML = `
+                <tr><td>#1024</td><td>Arjun K.</td><td>Veg Biryani</td><td><button class="btn-verify" onclick="openModal(1024, 'Arjun K.')">Verify OTP</button></td></tr>
+            `;
+        }
+    }
+
+    function openModal(id, name) {
+        activeId = id;
+        document.getElementById('m-title').innerText = "Verify Arjun K.";
+        document.getElementById('otpModal').style.display = 'block';
+        document.getElementById('o1').focus();
+    }
+
+    // Auto-move to next box
+    function moveFocus(curr, nextId) {
+        if (curr.value.length === 1) {
+            document.getElementById(nextId).focus();
+        }
+    }
+
+    // This handles the 4th box and submits automatically
+    async function autoSubmit(curr) {
+        if (curr.value.length === 1) {
+            const otp = document.getElementById('o1').value + 
+                        document.getElementById('o2').value + 
+                        document.getElementById('o3').value + 
+                        document.getElementById('o4').value;
+            
+            const msg = document.getElementById('statusMsg');
+            msg.style.display = 'block';
+            msg.innerText = "Verifying...";
+
+            try {
+                const res = await fetch(`${API_URL}/verify-otp/${activeId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ otp: otp })
+                });
+
+                if (res.ok) {
+                    msg.innerText = "✅ SUCCESS! Hand over food.";
+                    msg.style.color = "var(--primary-green)";
+                    document.querySelectorAll('.otp-input').forEach(i => i.classList.add('success'));
+                    
+                    setTimeout(() => {
+                        closeModal();
+                        loadClaims();
+                    }, 2000);
+                } else {
+                    msg.innerText = "❌ Invalid Code. Try again.";
+                    msg.style.color = "var(--error-red)";
+                    document.querySelectorAll('.otp-input').forEach(i => {
+                        i.value = '';
+                        i.classList.add('error');
+                    });
+                    document.getElementById('o1').focus();
+                }
+            } catch (err) {
+                msg.innerText = "Server Error. Try again later.";
+            }
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('otpModal').style.display = 'none';
+        document.querySelectorAll('.otp-input').forEach(i => {
+            i.value = '';
+            i.classList.remove('success', 'error');
+        });
+        document.getElementById('statusMsg').style.display = 'none';
+    }
+
+    window.onload = loadClaims;
+</script>
+
+</body>
+</html>

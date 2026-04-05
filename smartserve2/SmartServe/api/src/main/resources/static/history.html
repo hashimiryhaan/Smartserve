@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartServe | My Rescues</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: #FF6B6B;
+            --brand-dark: #1A1C1E;
+            --bg-gray: #F8FAFC;
+            --success: #2E7D32;
+            --danger: #EF4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-gray); color: var(--brand-dark); padding: 20px; }
+
+        .container { max-width: 500px; margin: 0 auto; }
+
+        .header-row { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
+        .back-btn { 
+            text-decoration: none; color: var(--brand-dark); background: white; 
+            width: 40px; height: 40px; border-radius: 50%; display: flex; 
+            align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            font-weight: bold; font-size: 18px;
+        }
+
+        /* --- ACTIVE OTP TICKET --- */
+        #activeSection { display: none; margin-bottom: 35px; }
+        .ticket {
+            background: #FFF9C4; border: 2px dashed #FBC02D; border-radius: 28px;
+            padding: 30px; text-align: center; position: relative;
+        }
+        .ticket-label { font-size: 11px; font-weight: 800; color: #856404; text-transform: uppercase; letter-spacing: 1px; }
+        .otp-code { font-size: 48px; font-weight: 800; color: var(--brand-dark); margin: 15px 0; letter-spacing: 8px; cursor: pointer; }
+        .ticket-msg { font-size: 13px; color: #64748B; font-weight: 500; margin-bottom: 15px; }
+
+        .cancel-link {
+            display: inline-block; color: var(--danger); font-size: 12px;
+            font-weight: 700; text-decoration: none; cursor: pointer;
+            padding: 8px 16px; border: 1px solid #FEE2E2; border-radius: 8px;
+            background: #FEF2F2; transition: 0.2s;
+        }
+        .cancel-link:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
+        .save-btn {
+            display: inline-block; color: #856404; font-size: 12px;
+            font-weight: 700; text-decoration: none; cursor: pointer;
+            padding: 8px 16px; border: 1px solid #FBC02D; border-radius: 8px;
+            background: white; margin-left: 10px;
+        }
+
+        /* --- HISTORY LIST --- */
+        .section-title { font-size: 15px; font-weight: 800; margin-bottom: 15px; color: #64748B; }
+        
+        .history-card {
+            background: white; padding: 20px; border-radius: 20px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid #E2E8F0; transition: 0.3s;
+        }
+        
+        .food-info h4 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+        .food-info p { font-size: 12px; color: #94A3B8; font-weight: 600; }
+        
+        .status-badge {
+            padding: 6px 12px; border-radius: 50px; font-size: 11px; font-weight: 800;
+        }
+
+        #loadingState { text-align: center; padding: 40px; color: #64748B; font-weight: 600; }
+
+        /* PRINT LOGIC FOR SAVING TICKET */
+        @media print {
+            body * { visibility: hidden; }
+            #activeSection, #activeSection * { visibility: visible; }
+            #activeSection { position: absolute; left: 0; top: 0; width: 100%; }
+            .cancel-link, .save-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-row">
+        <a href="marketplace.html" class="back-btn">←</a>
+        <h2>My Rescues</h2>
+    </div>
+
+    <div id="activeSection">
+        <div class="ticket">
+            <span class="ticket-label">Active Pickup Code</span>
+            <div class="otp-code" id="activeOtp" onclick="copyToClipboard()">----</div>
+            <p class="ticket-msg">Show this at the shop to collect your food!</p>
+            <div id="buttonRow" style="display: flex; justify-content: center;">
+                <div id="cancelContainer"></div>
+                <span class="save-btn" onclick="window.print()">Save Ticket</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-title">Rescue History</div>
+    <div id="loadingState">Fetching your impact history...</div>
+    <div id="historyList"></div>
+</div>
+
+<script>
+    const CLAIMANT_ID = localStorage.getItem('ss_id') || 2; 
+
+    // Helper: Copy OTP to clipboard
+    function copyToClipboard() {
+        const otp = document.getElementById('activeOtp').innerText;
+        navigator.clipboard.writeText(otp);
+        alert("OTP " + otp + " copied to clipboard!");
+    }
+
+    async function loadData() {
+        const loader = document.getElementById('loadingState');
+        const historyList = document.getElementById('historyList');
+        const activeSection = document.getElementById('activeSection');
+
+        try {
+            const response = await fetch(`http://localhost:8080/api/claims/user/${CLAIMANT_ID}`);
+            if(!response.ok) throw new Error("Server Error");
+            const data = await response.json();
+            renderUI(data);
+        } catch (err) {
+            loader.innerText = "Cannot connect to server. Ensure Spring Boot is running.";
+            loader.style.color = "red";
+        }
+    }
+
+    async function cancelRescue(claimId) {
+        if(confirm("Are you sure you want to cancel? This food will be returned to the marketplace.")) {
+            try {
+                const response = await fetch(`http://localhost:8080/api/claims/cancel/${claimId}`, {
+                    method: 'POST'
+                });
+                if(response.ok) {
+                    alert("Rescue cancelled.");
+                    loadData();
+                }
+            } catch (err) { alert("Network error."); }
+        }
+    }
+
+    function renderUI(claims) {
+        const activeSection = document.getElementById('activeSection');
+        const activeOtpDisplay = document.getElementById('activeOtp');
+        const cancelContainer = document.getElementById('cancelContainer');
+        const historyList = document.getElementById('historyList');
+        const loader = document.getElementById('loadingState');
+
+        loader.style.display = 'none';
+        historyList.innerHTML = '';
+        let hasActive = false;
+
+        if (!claims || claims.length === 0) {
+            loader.style.display = 'block';
+            loader.innerHTML = `<p>No rescues yet.</p><a href="marketplace.html">Go to Marketplace →</a>`;
+            activeSection.style.display = 'none';
+            return;
+        }
+
+        claims.sort((a, b) => b.id - a.id);
+
+        claims.forEach(claim => {
+            // Logic for the YELLOW OTP TICKET
+            if (claim.status === 'PENDING' && !hasActive) {
+                activeOtpDisplay.innerText = claim.otp;
+                cancelContainer.innerHTML = `<span class="cancel-link" onclick="cancelRescue(${claim.id})">Cancel Rescue</span>`;
+                activeSection.style.display = 'block';
+                hasActive = true;
+            } 
+            
+            const title = (claim.food && claim.food.title) ? claim.food.title : "Food Item";
+            const dateStr = claim.verifiedAt || claim.claimedAt;
+            const displayDate = new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+            
+            let badgeColor = "#F1F5F9"; 
+            let textColor = "#64748B";
+            let label = claim.status;
+
+            if(claim.status === 'VERIFIED') {
+                badgeColor = "#E8F5E9"; textColor = "#2E7D32"; label = "SAVED";
+            } else if(claim.status === 'PENDING') {
+                badgeColor = "#FFF9C4"; textColor = "#856404"; label = "PENDING";
+            } else if(claim.status === 'CANCELLED') {
+                badgeColor = "#FEF2F2"; textColor = "#EF4444"; label = "CANCELLED";
+            }
+
+            historyList.innerHTML += `
+                <div class="history-card">
+                    <div class="food-info">
+                        <h4>${title}</h4>
+                        <p>${label} • ${displayDate}</p>
+                    </div>
+                    <div class="status-badge" style="background: ${badgeColor}; color: ${textColor}">
+                        ${label}
+                    </div>
+                </div>
+            `;
+        });
+
+        if(!hasActive) activeSection.style.display = 'none';
+    }
+
+    window.onload = loadData;
+</script>
+</body>
+</html>
