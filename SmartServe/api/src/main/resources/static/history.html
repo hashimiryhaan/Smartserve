@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartServe | History & Records</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: #5D54B1;
+            --charity-blue: #2D63ED;
+            --bg-gradient: linear-gradient(135deg, #f8f9ff 0%, #fcfaff 100%);
+            --text-dark: #1A1C1E;
+            --text-muted: #71717A;
+            --radius-xl: 20px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg-gradient);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        /* --- Navigation --- */
+        nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 6%; background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px); border-bottom: 1px solid #E4E4E7;
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .back-home { text-decoration: none; color: var(--text-dark); font-weight: 700; font-size: 13px; }
+        .logo { font-size: 22px; font-weight: 800; letter-spacing: -1px; }
+        .logo span { color: var(--brand-primary); }
+
+        /* --- Header & Tabs --- */
+        .header-section { padding: 40px 6% 20px; text-align: center; }
+        .header-section h1 { font-size: 32px; font-weight: 800; margin-bottom: 20px; }
+        
+        .tab-container {
+            display: inline-flex; background: #fff; padding: 5px;
+            border-radius: 12px; border: 1px solid #E4E4E7; margin-bottom: 30px;
+        }
+        .tab-btn {
+            padding: 10px 24px; border: none; background: transparent;
+            font-weight: 700; font-size: 14px; color: var(--text-muted);
+            border-radius: 8px; cursor: pointer; transition: 0.3s;
+        }
+        .tab-btn.active { background: var(--brand-primary); color: white; }
+
+        /* --- Table Styles --- */
+        .table-wrapper { padding: 0 6% 60px; display: none; }
+        .table-wrapper.active { display: block; }
+        .data-table-container { 
+            background: white; border-radius: var(--radius-xl); overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #E4E4E7; 
+        }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th { padding: 15px 20px; background: #f8f9ff; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+        .data-table td { padding: 15px 20px; border-bottom: 1px solid #f4f4f5; font-weight: 600; font-size: 14px; }
+        
+        .badge { padding: 4px 10px; border-radius: 50px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .badge-success { background: #DCFCE7; color: #166534; }
+        .badge-pending { background: #FEF3C7; color: #92400E; }
+        .otp-box { background: #F4F4F5; padding: 4px 12px; border-radius: 6px; font-family: monospace; font-size: 15px; font-weight: 800; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="javascript:history.back()" class="back-home">← BACK</a>
+        <div class="logo">SMART<span>SERVE</span></div>
+        <div style="width: 60px;"></div> </nav>
+
+    <div class="header-section">
+        <h1>Activity History</h1>
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="switchTab('donations')" id="tab-donations">My Donations</button>
+            <button class="tab-btn" onclick="switchTab('pickups')" id="tab-pickups">My Pickups</button>
+        </div>
+    </div>
+
+    <div class="table-wrapper active" id="view-donations">
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Item ID</th>
+                        <th>Food Item</th>
+                        <th>Category</th>
+                        <th>Listing Mode</th>
+                        <th>Status</th>
+                        <th>OTP Code</th>
+                        <th>Date Published</th>
+                    </tr>
+                </thead>
+                <tbody id="donorHistoryList">
+                    <tr><td colspan="6" style="text-align:center; padding:30px;">Loading donations...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="table-wrapper" id="view-pickups">
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Claim ID</th>
+                        <th>Food Item</th>
+                        <th>Donor Name</th>
+                        <th>Status</th>
+                        <th>Verified OTP</th>
+                        <th>Claim Date</th>
+                    </tr>
+                </thead>
+                <tbody id="claimHistoryList">
+                    <tr><td colspan="6" style="text-align:center; padding:30px;">Loading pickups...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const FOOD_API = "http://localhost:8080/api/food";
+        const CLAIM_API = "http://localhost:8080/api/claims";
+        let savedUserId = null;
+
+        function switchTab(tabName) {
+            // Update Buttons
+            document.getElementById('tab-donations').classList.remove('active');
+            document.getElementById('tab-pickups').classList.remove('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            // Update Views
+            document.getElementById('view-donations').classList.remove('active');
+            document.getElementById('view-pickups').classList.remove('active');
+            document.getElementById(`view-${tabName}`).classList.add('active');
+        }
+
+        async function loadHistory() {
+            savedUserId = localStorage.getItem('ss_id');
+            if (!savedUserId) {
+                alert("Please log in to view your history.");
+                window.location.href = "index.html";
+                return;
+            }
+
+            try {
+                // 1. Fetch All Claims First (so we have the OTPs)
+                const claimRes = await fetch(CLAIM_API);
+                const allClaims = await claimRes.json();
+                
+                // 2. Fetch Food Data
+                const foodRes = await fetch(FOOD_API);
+                const allFood = await foodRes.json();
+                
+                // 3. Filter Data
+                const myDonations = allFood.filter(f => f.donor && f.donor.id == savedUserId);
+               // FIXED: Looking for 'claimant' (matches your Spring Boot entity)
+                const myPickups = allClaims.filter(c => c.claimant && c.claimant.id == savedUserId);
+                
+                // 4. Render Tables (Pass allClaims into donations so we can find the OTP)
+                renderDonations(myDonations, allClaims);
+                renderPickups(myPickups);
+
+            } catch (error) {
+                console.error("Failed to load history:", error);
+            }
+        }
+
+        function renderDonations(items, allClaims) {
+            const list = document.getElementById('donorHistoryList');
+            if (items.length === 0) {
+                list.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#999;">You haven't listed any food yet.</td></tr>`;
+                return;
+            }
+
+            list.innerHTML = items.map(item => {
+                const statusBadge = item.status === 'CLAIMED' ? 'badge-success' : 'badge-pending';
+                const date = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
+                
+                // FIND THE OTP: Look for a claim linked to this specific food item
+                const relatedClaim = allClaims.find(c => c.food && c.food.id === item.id && c.status !== 'CANCELLED');
+                const otpDisplay = relatedClaim && relatedClaim.otp ? `<span class="otp-box">${relatedClaim.otp}</span>` : '<span style="color:#999;">N/A</span>';
+                
+                return `
+                <tr>
+                    <td style="color:var(--brand-primary); font-weight: 800;">#F-${item.id}</td>
+                    <td style="font-weight: 700;">${item.title}</td>
+                    <td>${item.category ? item.category.name : 'N/A'}</td>
+                    <td>${item.listingType === 'DONATION' ? 'Charity Rescue' : 'Marketplace'}</td>
+                    <td><span class="badge ${statusBadge}">${item.status}</span></td>
+                    <td>${otpDisplay}</td> <td style="color:var(--text-muted); font-size:13px;">${date}</td>
+                </tr>
+                `;
+            }).join('');
+        }
+        function renderPickups(claims) {
+            const list = document.getElementById('claimHistoryList');
+            if (claims.length === 0) {
+                list.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">You haven't claimed any items yet.</td></tr>`;
+                return;
+            }
+
+            list.innerHTML = claims.map(c => {
+                const isVerified = c.status === 'VERIFIED';
+                const statusBadge = isVerified ? 'badge-success' : 'badge-pending';
+                const donorName = (c.food && c.food.donor) ? c.food.donor.name : 'Unknown';
+                const foodTitle = c.food ? c.food.title : 'Deleted Item';
+                
+                // If backend has the OTP saved, show it. Otherwise show a placeholder or hidden state.
+                const otpDisplay = c.otp ? c.otp : (isVerified ? '****' : 'Pending');
+
+                return `
+                <tr>
+                    <td style="color:var(--brand-primary);">#C-${c.id}</td>
+                    <td>${foodTitle}</td>
+                    <td>${donorName}</td>
+                    <td><span class="badge ${statusBadge}">${c.status}</span></td>
+                    <td><span class="${c.otp ? 'otp-box' : ''}" style="color:${isVerified ? '#166534' : '#999'}">${otpDisplay}</span></td>
+                    <td style="color:var(--text-muted); font-size:13px;">${c.claimedat || 'N/A'}</td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        window.onload = loadHistory;
+    </script>
+</body>
+</html>

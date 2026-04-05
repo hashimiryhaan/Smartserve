@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartServe | Food Details</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent-coral: #E57373;
+            --charity-blue: #2D63ED; /* Branding for Charity features */
+            --bg-gradient: linear-gradient(135deg, #fff5f5 0%, #fef2f2 50%, #fff1f1 100%);
+            --text-dark: #2D1B1B;
+            --card-pink: rgba(252, 228, 228, 0.6);
+            --card-blue: rgba(45, 99, 237, 0.05);
+            --nav-dark: #903030;
+        }
+
+        /* Charity Mode Override */
+        body.charity-mode {
+            --bg-gradient: linear-gradient(135deg, #f0f4ff 0%, #eef2ff 100%);
+            --accent-coral: var(--charity-blue);
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            margin: 0; padding: 0; color: var(--text-dark); 
+            transition: background 0.5s ease;
+        }
+
+        nav { 
+            background: var(--nav-dark); 
+            padding: 18px 8%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            color: white; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .back-link { 
+            color: white; 
+            text-decoration: none; 
+            font-weight: 600; 
+            font-size: 14px; 
+            opacity: 0.9;
+            transition: 0.3s;
+        }
+        .back-link:hover { opacity: 1; transform: translateX(-3px); }
+
+        .container { 
+            max-width: 1100px; 
+            margin: 60px auto; 
+            display: grid; 
+            grid-template-columns: 1.1fr 0.9fr; 
+            gap: 50px; 
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.03);
+        }
+
+        .main-img { 
+            width: 100%; 
+            height: 500px; 
+            border-radius: 30px; 
+            object-fit: cover; 
+            background: #eee;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .main-img:hover { transform: scale(1.02); }
+
+        .info-panel h1 { font-size: 38px; font-weight: 800; margin: 5px 0 15px 0; letter-spacing: -1px; }
+        
+        .price-row { margin-bottom: 20px; display: flex; align-items: baseline; gap: 12px; }
+        .discount-price { font-size: 36px; font-weight: 800; color: #2D1B1B; }
+        .original-price { font-size: 18px; color: #999; text-decoration: line-through; }
+
+        .category-badge {
+            display: inline-block;
+            text-transform: uppercase;
+            color: var(--accent-coral);
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .timer-box { 
+            background: var(--accent-coral); 
+            color: white; 
+            display: inline-block; 
+            padding: 8px 20px; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            font-size: 14px;
+            margin-bottom: 25px; 
+        }
+
+        .detail-item { 
+            background: var(--card-pink); 
+            padding: 20px; 
+            border-radius: 20px; 
+            margin-bottom: 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            font-weight: 600; 
+            border: 1px solid rgba(229, 115, 115, 0.1);
+            transition: 0.3s;
+        }
+        body.charity-mode .detail-item { background: var(--card-blue); border-color: rgba(45, 99, 237, 0.1); }
+
+        .claim-btn { 
+            width: 100%; 
+            background: var(--accent-coral); 
+            color: white; 
+            border: none; 
+            padding: 22px; 
+            border-radius: 20px; 
+            font-size: 18px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            margin-top: 25px; 
+            box-shadow: 0 12px 25px rgba(229, 115, 115, 0.4); 
+            transition: 0.3s; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .claim-btn:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(229, 115, 115, 0.5); }
+        .claim-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+
+        /* Overlay & Handshake UI */
+        .overlay { position: fixed; inset: 0; background: rgba(45, 27, 27, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(8px); }
+        .otp-card { background: white; padding: 50px; border-radius: 40px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 30px 60px rgba(0,0,0,0.2); }
+        .otp-display { font-size: 48px; font-weight: 800; letter-spacing: 10px; color: var(--accent-coral); margin: 25px 0; padding: 20px; border: 3px dashed var(--accent-coral); border-radius: 20px; background: #fffafa; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div style="font-size: 26px; font-weight: 800; letter-spacing: -1px;">SmartServe</div>
+    <a href="marketplace.html" class="back-link">← Back to Marketplace</a>
+</nav>
+
+<div class="container">
+    <div class="gallery">
+        <img src="" class="main-img" id="mainImg" alt="Food Image">
+    </div>
+
+    <div class="info-panel">
+        <div class="category-badge" id="foodCategory">Loading...</div>
+        <h1 id="foodTitle">Loading...</h1>
+        
+        <div class="price-row" id="priceRow">
+            <span id="discountPrice" class="discount-price">₹--</span>
+            <span id="originalPrice" class="original-price">₹--</span>
+        </div>
+
+        <div class="timer-box">⏳ Pickup Window: <span id="pickupTime">--</span></div>
+
+        <p id="foodDesc" style="color: #666; line-height: 1.8; margin-bottom: 30px; font-size: 16px;"></p>
+
+        <div class="detail-item"><span>📦</span> <span id="foodQty">Quantity: --</span></div>
+        <div class="detail-item"><span>📍</span> <span id="foodLoc">Pickup: --</span></div>
+        <div class="detail-item" id="rescueBadge" style="display: none; background: #e0e7ff; color: #2D63ED;">
+            <span>🛡️</span> <strong>OFFICIAL CHARITY RESCUE</strong>
+        </div>
+
+        <button class="claim-btn" id="actionBtn" onclick="processClaim()">CLAIM THIS FOOD</button>
+    </div>
+</div>
+
+<div class="overlay" id="otpOverlay">
+    <div class="otp-card">
+        <div style="font-size: 60px; margin-bottom: 10px;" id="otpIcon">🎁</div>
+        <h2 style="font-size: 28px; font-weight: 800;" id="otpTitle">Claim Successful!</h2>
+        <p style="color: #777; font-weight: 500;" id="otpSubtext">Show this code to the donor at the location</p>
+        <div class="otp-display" id="otpValue">----</div>
+        <div style="background: #f8f8f8; padding: 15px; border-radius: 20px; margin-bottom: 25px;">
+            <small style="text-transform: uppercase; font-weight: 800; color: #aaa; font-size: 10px;">Reference ID</small>
+            <div style="font-size: 22px; font-weight: 700;">#<span id="claimIdDisplay">----</span></div>
+        </div>
+        <button onclick="window.location.href='marketplace.html'" style="width: 100%; padding: 18px; border-radius: 15px; border: none; background: #2D1B1B; color: white; font-weight: 700; cursor: pointer; transition: 0.3s;">Done</button>
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://localhost:8080/api/food";
+    const CLAIM_API = "http://localhost:8080/api/claims";
+    const urlParams = new URLSearchParams(window.location.search);
+    const foodId = urlParams.get('id');
+
+    // Retrieve User Info from localStorage
+    const currentUserId = localStorage.getItem('ss_id') || 2; // Default to 2 for testing
+    const currentUserRole = localStorage.getItem('ss_role'); // e.g., 'charity' or 'user'
+
+    async function loadDetails() {
+        if (!foodId) return;
+
+        try {
+            const res = await fetch(`${API_URL}/${foodId}`);
+            if (!res.ok) throw new Error("Not found");
+            const item = await res.json();
+
+            // Set content
+            document.getElementById('foodTitle').innerText = item.title || "Food Item";
+            document.getElementById('foodDesc').innerText = item.description || "Fresh surplus available for quick pickup in Kochi.";
+            document.getElementById('foodQty').innerText = `Quantity: ${item.quantity || 'Available'}`;
+            document.getElementById('foodLoc').innerText = `Pickup: ${item.addressText || 'Kochi Center'}`;
+            document.getElementById('pickupTime').innerText = item.pickupTime || "Immediate";
+            document.getElementById('mainImg').src = item.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800';
+            
+            // Handle Listing Type (Charity Connection Feature)
+            if (item.listingType === 'DONATION') {
+                document.body.classList.add('charity-mode');
+                document.getElementById('priceRow').style.display = 'none';
+                document.getElementById('rescueBadge').style.display = 'flex';
+                document.getElementById('foodCategory').innerText = "CHARITY RESCUE";
+                
+                if (currentUserRole === 'charity') {
+                    document.getElementById('actionBtn').innerText = "INITIATE RESCUE HANDSHAKE";
+                }
+            } else {
+                document.getElementById('discountPrice').innerText = `₹${item.discountedPrice || 0}`;
+                document.getElementById('originalPrice').innerText = `₹${item.originalPrice || 0}`;
+                document.getElementById('foodCategory').innerText = item.category?.name || "Surplus Food";
+            }
+
+        } catch (e) {
+            console.error("Fetch failed", e);
+            document.getElementById('foodTitle').innerText = "Item Not Found";
+        }
+    }
+
+    async function processClaim() {
+        const actionBtn = document.getElementById('actionBtn');
+        const originalText = actionBtn.innerText;
+        
+        actionBtn.innerText = "CONNECTING...";
+        actionBtn.disabled = true;
+
+        try {
+            // Updated API endpoint to include claimantId from localStorage
+            const response = await fetch(`${CLAIM_API}/add?foodId=${foodId}&claimantId=${currentUserId}`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const claimData = await response.json(); 
+                
+                // Customize Overlay for Charity
+                if (document.body.classList.contains('charity-mode')) {
+                    document.getElementById('otpIcon').innerText = "🤝";
+                    document.getElementById('otpTitle').innerText = "Rescue Connection Sent!";
+                    document.getElementById('otpSubtext').innerText = "Provide this Secure Handshake code to the donor representative.";
+                }
+
+                document.getElementById('otpValue').innerText = claimData.otp;
+                document.getElementById('claimIdDisplay').innerText = claimData.id;
+                document.getElementById('otpOverlay').style.display = 'flex';
+            } else {
+                alert("This item is no longer available for claim/rescue.");
+                actionBtn.innerText = originalText;
+                actionBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error("Connection Error:", error);
+            alert("Server connection failed. Please check your Spring Boot application.");
+            actionBtn.innerText = originalText;
+            actionBtn.disabled = false;
+        }
+    }
+
+    window.onload = loadDetails;
+</script>
+
+</body>
+</html>
