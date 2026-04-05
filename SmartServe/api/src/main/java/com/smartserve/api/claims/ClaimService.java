@@ -24,19 +24,32 @@ public class ClaimService {
      */
     @Transactional
     public Claim createClaim(Claim claim) {
-        // 1. Generate a random 4-digit OTP
+        // 1. Fetch the food item
+        FoodListing food = foodListingRepository.findById(claim.getFood().getId())
+                .orElseThrow(() -> new RuntimeException("Food listing not found"));
+                
+        // 2. Validate the requested quantity
+        if (claim.getClaimedQuantity() == null || claim.getClaimedQuantity() <= 0) {
+            throw new RuntimeException("You must claim at least 1 item.");
+        }
+        if (food.getQuantity() < claim.getClaimedQuantity()) {
+            throw new RuntimeException("Not enough food available! Only " + food.getQuantity() + " left.");
+        }
+
+        // 3. Decrement the food quantity
+        food.setQuantity(food.getQuantity() - claim.getClaimedQuantity());
+
+        // 4. If quantity hits 0, hide it from the marketplace
+        if (food.getQuantity() == 0) {
+            food.setStatus(FoodListing.ListingStatus.CLAIMED); 
+        }
+        foodListingRepository.save(food); // Save the updated inventory
+
+        // 5. Generate OTP and save the claim
         String randomOtp = String.valueOf(1000 + new Random().nextInt(9000));
         claim.setOtp(randomOtp);
         claim.setStatus(Claim.ClaimStatus.PENDING);
         claim.setClaimedAt(LocalDateTime.now());
-        
-        // 2. Mark the food as CLAIMED so others can't see it in the marketplace
-        FoodListing food = foodListingRepository.findById(claim.getFood().getId())
-                .orElseThrow(() -> new RuntimeException("Food listing not found"));
-        
-        // Ensure naming matches your FoodListing.ListingStatus enum (e.g., CLAIMED)
-        food.setStatus(FoodListing.ListingStatus.CLAIMED); 
-        foodListingRepository.save(food);
 
         return claimRepository.save(claim);
     }

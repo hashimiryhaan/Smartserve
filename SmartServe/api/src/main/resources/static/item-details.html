@@ -8,7 +8,7 @@
     <style>
         :root {
             --accent-coral: #E57373;
-            --charity-blue: #2D63ED; /* Branding for Charity features */
+            --charity-blue: #2D63ED;
             --bg-gradient: linear-gradient(135deg, #fff5f5 0%, #fef2f2 50%, #fff1f1 100%);
             --text-dark: #2D1B1B;
             --card-pink: rgba(252, 228, 228, 0.6);
@@ -135,6 +135,18 @@
         .claim-btn:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(229, 115, 115, 0.5); }
         .claim-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
 
+        /* Quantity Widget Styles */
+        .qty-widget {
+            display: flex; justify-content: space-between; align-items: center; 
+            width: 100%; margin-top: 10px;
+        }
+        .qty-btn {
+            width: 40px; height: 40px; border-radius: 12px; border: none; 
+            background: white; font-size: 20px; font-weight: bold; cursor: pointer; 
+            color: var(--accent-coral); box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.2s;
+        }
+        .qty-btn:hover { transform: scale(1.05); }
+
         /* Overlay & Handshake UI */
         .overlay { position: fixed; inset: 0; background: rgba(45, 27, 27, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(8px); }
         .otp-card { background: white; padding: 50px; border-radius: 40px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 30px 60px rgba(0,0,0,0.2); }
@@ -166,8 +178,20 @@
 
         <p id="foodDesc" style="color: #666; line-height: 1.8; margin-bottom: 30px; font-size: 16px;"></p>
 
-        <div class="detail-item"><span>📦</span> <span id="foodQty">Quantity: --</span></div>
+        <div class="detail-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+            <div style="display: flex; justify-content: space-between; width: 100%; font-size: 14px;">
+                <span>📦 <strong>Select Quantity</strong></span>
+                <span id="maxAvailable" style="color: #666;">Available: --</span>
+            </div>
+            <div class="qty-widget">
+                <button class="qty-btn" onclick="changeQty(-1)">-</button>
+                <div id="displayQty" style="font-size: 24px; font-weight: 800;">1</div>
+                <button class="qty-btn" onclick="changeQty(1)">+</button>
+            </div>
+        </div>
+
         <div class="detail-item"><span>📍</span> <span id="foodLoc">Pickup: --</span></div>
+        
         <div class="detail-item" id="rescueBadge" style="display: none; background: #e0e7ff; color: #2D63ED;">
             <span>🛡️</span> <strong>OFFICIAL CHARITY RESCUE</strong>
         </div>
@@ -186,7 +210,7 @@
             <small style="text-transform: uppercase; font-weight: 800; color: #aaa; font-size: 10px;">Reference ID</small>
             <div style="font-size: 22px; font-weight: 700;">#<span id="claimIdDisplay">----</span></div>
         </div>
-        <button onclick="window.location.href='marketplace.html'" style="width: 100%; padding: 18px; border-radius: 15px; border: none; background: #2D1B1B; color: white; font-weight: 700; cursor: pointer; transition: 0.3s;">Done</button>
+        <button onclick="window.location.href='history.html'" style="width: 100%; padding: 18px; border-radius: 15px; border: none; background: #2D1B1B; color: white; font-weight: 700; cursor: pointer; transition: 0.3s;">View Order History</button>
     </div>
 </div>
 
@@ -200,6 +224,10 @@
     const currentUserId = localStorage.getItem('ss_id') || 2; // Default to 2 for testing
     const currentUserRole = localStorage.getItem('ss_role'); // e.g., 'charity' or 'user'
 
+    // Variables for Quantity Math
+    let currentQty = 1;
+    let maxQty = 1;
+
     async function loadDetails() {
         if (!foodId) return;
 
@@ -211,11 +239,19 @@
             // Set content
             document.getElementById('foodTitle').innerText = item.title || "Food Item";
             document.getElementById('foodDesc').innerText = item.description || "Fresh surplus available for quick pickup in Kochi.";
-            document.getElementById('foodQty').innerText = `Quantity: ${item.quantity || 'Available'}`;
             document.getElementById('foodLoc').innerText = `Pickup: ${item.addressText || 'Kochi Center'}`;
             document.getElementById('pickupTime').innerText = item.pickupTime || "Immediate";
             document.getElementById('mainImg').src = item.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800';
             
+            // Setup Max Quantity
+            maxQty = item.quantity || 0;
+            document.getElementById('maxAvailable').innerText = `Available: ${maxQty}`;
+            
+            if(maxQty === 0) {
+                document.getElementById('actionBtn').innerText = "OUT OF STOCK";
+                document.getElementById('actionBtn').disabled = true;
+            }
+
             // Handle Listing Type (Charity Connection Feature)
             if (item.listingType === 'DONATION') {
                 document.body.classList.add('charity-mode');
@@ -238,17 +274,35 @@
         }
     }
 
+    // Function to handle the + and - buttons
+    function changeQty(delta) {
+        let newQty = currentQty + delta;
+        if (newQty >= 1 && newQty <= maxQty) {
+            currentQty = newQty;
+            document.getElementById('displayQty').innerText = currentQty;
+        }
+    }
+
     async function processClaim() {
         const actionBtn = document.getElementById('actionBtn');
         const originalText = actionBtn.innerText;
         
-        actionBtn.innerText = "CONNECTING...";
+        actionBtn.innerText = "PROCESSING...";
         actionBtn.disabled = true;
 
+        // NEW: Proper JSON format matching your updated backend
+        const claimData = {
+            food: { id: parseInt(foodId) },
+            claimant: { id: parseInt(currentUserId) }, 
+            claimedQuantity: currentQty 
+        };
+
         try {
-            // Updated API endpoint to include claimantId from localStorage
-            const response = await fetch(`${CLAIM_API}/add?foodId=${foodId}&claimantId=${currentUserId}`, {
-                method: 'POST'
+            // Add the /add to match your Spring Boot controller!
+            const response = await fetch(`${CLAIM_API}/add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(claimData)
             });
 
             if (response.ok) {
@@ -265,13 +319,14 @@
                 document.getElementById('claimIdDisplay').innerText = claimData.id;
                 document.getElementById('otpOverlay').style.display = 'flex';
             } else {
-                alert("This item is no longer available for claim/rescue.");
+                const errText = await response.text();
+                alert("Booking failed: " + errText);
                 actionBtn.innerText = originalText;
                 actionBtn.disabled = false;
             }
         } catch (error) {
             console.error("Connection Error:", error);
-            alert("Server connection failed. Please check your Spring Boot application.");
+            alert("Network error. Ensure Spring Boot is running and @CrossOrigin is added.");
             actionBtn.innerText = originalText;
             actionBtn.disabled = false;
         }

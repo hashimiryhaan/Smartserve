@@ -148,6 +148,44 @@
             font-weight: 800;
             margin-left: 8px;
         }
+
+        /* --- Booking Slide-Out Panel --- */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); 
+            backdrop-filter: blur(4px); z-index: 2000; 
+            display: none; justify-content: flex-end;
+        }
+        .overlay.active { display: flex; }
+        .side-panel {
+            width: 100%; max-width: 450px; background: #fff; height: 100%; 
+            padding: 40px; overflow-y: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.1); 
+            animation: slideIn 0.3s ease; display: flex; flex-direction: column;
+        }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        
+        /* Summary Card */
+        .summary-card { 
+            display: flex; gap: 15px; background: #F8FAFC; padding: 15px; 
+            border-radius: 16px; margin-bottom: 30px; border: 1px solid #E2E8F0;
+        }
+        .summary-img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; }
+        .summary-info { display: flex; flex-direction: column; justify-content: center; }
+        .summary-title { font-size: 18px; font-weight: 800; color: var(--brand-dark); }
+        .summary-price { font-size: 16px; font-weight: 700; color: var(--success); margin-top: 5px; }
+
+        /* Quantity Controls */
+        .qty-controls { 
+            display: flex; align-items: center; gap: 15px; margin: 15px 0; 
+            background: #F8FAFC; padding: 10px; border-radius: 12px; 
+            width: fit-content; border: 1px solid #E2E8F0;
+        }
+        .qty-btn { 
+            width: 36px; height: 36px; border-radius: 8px; border: none; 
+            background: white; font-size: 18px; font-weight: bold; cursor: pointer; 
+            color: var(--brand-dark); box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s;
+        }
+        .qty-btn:hover { background: #E2E8F0; }
+        .qty-display { font-size: 18px; font-weight: 800; min-width: 30px; text-align: center; }
     </style>
 </head>
 <body>
@@ -203,6 +241,34 @@
         </main>
     </div>
 
+    <div class="overlay" id="bookingOverlay">
+        <div class="side-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 30px;">
+                <h2 id="panelTitle" style="font-size:24px; font-weight:800;">Confirm Booking</h2>
+                <div style="cursor:pointer; font-size:24px;" onclick="closeBookingPanel()">✕</div>
+            </div>
+
+            <div class="summary-card">
+                <img src="" id="panelImg" class="summary-img">
+                <div class="summary-info">
+                    <div class="summary-title" id="panelFoodName">Food Name</div>
+                    <div class="summary-price" id="panelPrice">Free</div>
+                </div>
+            </div>
+
+            <label style="font-size:12px; font-weight:800; color:#64748B; text-transform:uppercase;">Select Quantity</label>
+            <div class="qty-controls">
+                <button class="qty-btn" onclick="changeQty(-1)">-</button>
+                <div class="qty-display" id="panelQty">1</div>
+                <button class="qty-btn" onclick="changeQty(1)">+</button>
+            </div>
+            <p style="font-size:13px; color:#64748B; margin-top:-5px; margin-bottom: 30px;">Available: <span id="panelMaxQty">0</span></p>
+
+            <div style="margin-top: auto;">
+                <button id="confirmBookingBtn" class="connect-btn" style="padding: 18px; font-size: 16px;" onclick="submitBooking()">Confirm Booking</button>
+            </div>
+        </div>
+    </div>
     <script>
         const API_URL = "http://localhost:8080/api/food"; 
         const KOCHI_LAT = 10.015;
@@ -232,34 +298,115 @@
             }
         }
 
-        async function connectAsCharity(event, itemId) {
-            event.preventDefault();
-            event.stopPropagation();
+        // --- NEW BOOKING PANEL LOGIC ---
+        let selectedFoodItem = null;
+        let selectedQty = 1;
+
+        function openBookingPanel(event, itemId) {
+            event.preventDefault(); event.stopPropagation();
             
-            const charityId = localStorage.getItem('ss_id');
-            if (!charityId) {
-                alert("Please log in to connect.");
-                return;
+            const customerId = localStorage.getItem('ss_id');
+            if (!customerId) { alert("Please log in first."); window.location.href = "index.html"; return; }
+
+            // Find the item
+            selectedFoodItem = allItems.find(i => i.id === itemId);
+            if (!selectedFoodItem) return;
+            selectedQty = 1; // Reset to 1 every time panel opens
+            
+            // Populate the Panel Text
+            document.getElementById('panelFoodName').innerText = selectedFoodItem.title;
+            document.getElementById('panelPrice').innerText = selectedFoodItem.listingType === 'DONATION' ? 'FREE' : `₹${selectedFoodItem.discountedPrice}`;
+            document.getElementById('panelQty').innerText = selectedQty;
+            document.getElementById('panelMaxQty').innerText = selectedFoodItem.quantity;
+            
+            // Populate the Image
+            let finalFullUrl = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
+            if (selectedFoodItem.imageUrl) {
+                if (selectedFoodItem.imageUrl.startsWith('http')) finalFullUrl = selectedFoodItem.imageUrl;
+                else finalFullUrl = `http://localhost:8080${selectedFoodItem.imageUrl.startsWith('/') ? '' : '/'}${selectedFoodItem.imageUrl}`;
+            }
+            document.getElementById('panelImg').src = finalFullUrl;
+
+            // Change Colors based on User Role (Charity vs Customer)
+            const btn = document.getElementById('confirmBookingBtn');
+            if (isCharity) {
+                btn.style.background = 'var(--charity-blue)';
+                btn.innerText = "Connect & Rescue";
+                document.getElementById('panelTitle').innerText = "Charity Rescue";
+            } else {
+                btn.style.background = 'var(--brand-primary)';
+                btn.innerText = "Confirm Booking";
+                document.getElementById('panelTitle').innerText = "Confirm Booking";
             }
 
-            try {
-                const response = await fetch(`${API_URL}/${itemId}/connect`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ charityId: charityId })
-                });
+            // Slide it open
+            document.getElementById('bookingOverlay').classList.add('active');
+        }
 
-                if (response.ok) {
-                    alert("Connection Successful! Check your history for the Secure Handshake OTP.");
-                    window.location.href = "history.html";
-                } else {
-                    alert("Failed to connect. Item might already be claimed.");
-                }
-            } catch (error) {
-                console.error("Error connecting:", error);
-                alert("Server error. Is Spring Boot running?");
+        function closeBookingPanel() {
+            document.getElementById('bookingOverlay').classList.remove('active');
+            selectedFoodItem = null;
+        }
+
+        function changeQty(delta) {
+            if (!selectedFoodItem) return;
+            let newQty = selectedQty + delta;
+            
+            // Don't let them go below 1 or above max available
+            if (newQty >= 1 && newQty <= selectedFoodItem.quantity) {
+                selectedQty = newQty;
+                document.getElementById('panelQty').innerText = selectedQty;
             }
         }
+
+        async function submitBooking() {
+            if (!selectedFoodItem) return;
+            const customerId = localStorage.getItem('ss_id');
+            const btn = document.getElementById('confirmBookingBtn');
+            
+            // Save the original text so we can reset it later
+            const originalText = btn.innerText; 
+            
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            const claimData = {
+                food: { id: selectedFoodItem.id },
+                claimant: { id: customerId }, 
+                claimedQuantity: selectedQty 
+            };
+
+            try {
+                const res = await fetch('http://localhost:8080/api/claims', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(claimData)
+                });
+
+                if (res.ok) {
+                    // 1. Parse the JSON response from Spring Boot to get the saved Claim
+                    const savedClaim = await res.json();
+                    
+                    // 2. Show the OTP directly in the popup!
+                    alert(`✅ Successfully booked ${selectedQty} item(s)!\n\n🔑 YOUR OTP IS: ${savedClaim.otp}\n\nPlease show this code to the donor at pickup. You can also find it in your Order History.`);
+                    
+                    closeBookingPanel();
+                    fetchMarketplace(); // Refresh grid to update max quantity numbers
+                } else {
+                    const err = await res.text();
+                    alert("Failed to book: " + err);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("❌ Network error: Could not reach the server.\n\nMake sure Spring Boot is running and @CrossOrigin is added to your ClaimController.");
+            } finally {
+                // 3. THIS FIXES THE STUCK BUTTON! Resets it no matter what happens.
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        
 
         function handleSearch() {
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -364,14 +511,22 @@
                     `<span class="verified-badge-icon" title="Verified Donor">✓</span>` : '';
 
                 // Add the Charity Connect Button if the user is a charity
-                const charityButton = isCharity ? `
+                // Show Charity Connect if Charity, otherwise show Book Now for standard customers!
+                // Both Charity and Customers now open the SAME panel!
+                // This makes the buttons navigate to the details page
+                const actionButton = isCharity ? `
                     <div class="charity-connect-overlay">
-                        <button class="connect-btn" onclick="connectAsCharity(event, ${item.id})">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+                        <a href="item-details.html?id=${item.id}" class="connect-btn" style="text-decoration:none;">
                             Connect for Donation
-                        </button>
+                        </a>
                     </div>
-                ` : '';
+                ` : `
+                    <div class="charity-connect-overlay">
+                        <a href="item-details.html?id=${item.id}" class="connect-btn" style="background: var(--brand-primary); text-decoration:none;">
+                            Book Now
+                        </a>
+                    </div>
+                `;
 
                 return `
                 <div class="food-card">
@@ -396,8 +551,7 @@
                             </div>
                         </div>
                     </a>
-                    ${charityButton}
-                </div>`;
+                    ${actionButton} </div>`;
             }).join('');
         }
 
