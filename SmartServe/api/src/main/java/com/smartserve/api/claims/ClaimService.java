@@ -19,40 +19,63 @@ public class ClaimService {
     @Autowired
     private FoodListingRepository foodListingRepository;
 
+    @Autowired
+    private EmailService emailService;
+
     /**
      * Creates a new claim, generates an OTP, and hides the food from the marketplace.
      */
-    @Transactional
-    public Claim createClaim(Claim claim) {
-        // 1. Fetch the food item
-        FoodListing food = foodListingRepository.findById(claim.getFood().getId())
-                .orElseThrow(() -> new RuntimeException("Food listing not found"));
-                
-        // 2. Validate the requested quantity
-        if (claim.getClaimedQuantity() == null || claim.getClaimedQuantity() <= 0) {
-            throw new RuntimeException("You must claim at least 1 item.");
-        }
-        if (food.getQuantity() < claim.getClaimedQuantity()) {
-            throw new RuntimeException("Not enough food available! Only " + food.getQuantity() + " left.");
-        }
-
-        // 3. Decrement the food quantity
-        food.setQuantity(food.getQuantity() - claim.getClaimedQuantity());
-
-        // 4. If quantity hits 0, hide it from the marketplace
-        if (food.getQuantity() == 0) {
-            food.setStatus(FoodListing.ListingStatus.CLAIMED); 
-        }
-        foodListingRepository.save(food); // Save the updated inventory
-
-        // 5. Generate OTP and save the claim
-        String randomOtp = String.valueOf(1000 + new Random().nextInt(9000));
-        claim.setOtp(randomOtp);
-        claim.setStatus(Claim.ClaimStatus.PENDING);
-        claim.setClaimedAt(LocalDateTime.now());
-
-        return claimRepository.save(claim);
+    
+@Transactional
+public Claim createClaim(Claim claim) {
+    // 1. Fetch the food item
+    FoodListing food = foodListingRepository.findById(claim.getFood().getId())
+            .orElseThrow(() -> new RuntimeException("Food listing not found"));
+            
+    // 2. Validate the requested quantity
+    if (claim.getClaimedQuantity() == null || claim.getClaimedQuantity() <= 0) {
+        throw new RuntimeException("You must claim at least 1 item.");
     }
+    if (food.getQuantity() < claim.getClaimedQuantity()) {
+        throw new RuntimeException("Not enough food available! Only " + food.getQuantity() + " left.");
+    }
+
+    // 3. Decrement the food quantity
+    food.setQuantity(food.getQuantity() - claim.getClaimedQuantity());
+
+    // 4. If quantity hits 0, hide it from the marketplace
+    if (food.getQuantity() == 0) {
+        food.setStatus(FoodListing.ListingStatus.CLAIMED); 
+    }
+    foodListingRepository.save(food); // Save the updated inventory
+
+    // 5. Generate OTP and save the claim
+    String randomOtp = String.valueOf(1000 + new Random().nextInt(9000));
+    claim.setOtp(randomOtp);
+    claim.setStatus(Claim.ClaimStatus.PENDING);
+    claim.setClaimedAt(LocalDateTime.now());
+
+    // 6. Save the claim and store the result in a variable
+    Claim savedClaim = claimRepository.save(claim);
+
+    // 7. NEW: Trigger the Email Notification
+    try {
+        // We check if the claimant and their email exist before sending
+        if (savedClaim.getClaimant() != null && savedClaim.getClaimant().getEmail() != null) {
+            emailService.sendOtpEmail(
+                savedClaim.getClaimant().getEmail(), 
+                savedClaim.getFood().getTitle(), 
+                savedClaim.getOtp(), 
+                savedClaim.getClaimedQuantity()
+            );
+        }
+    } catch (Exception e) {
+        // If email fails, we log it but don't stop the user from booking
+        System.err.println("Email notification failed: " + e.getMessage());
+    }
+
+    return savedClaim;
+}
 
     /**
      * Verifies the OTP provided by the customer at the time of pickup.
