@@ -31,7 +31,7 @@ public Claim createClaim(Claim claim) {
     // 1. Fetch the food item
     FoodListing food = foodListingRepository.findById(claim.getFood().getId())
             .orElseThrow(() -> new RuntimeException("Food listing not found"));
-            
+    claim.setFood(food);        
     // 2. Validate the requested quantity
     if (claim.getClaimedQuantity() == null || claim.getClaimedQuantity() <= 0) {
         throw new RuntimeException("You must claim at least 1 item.");
