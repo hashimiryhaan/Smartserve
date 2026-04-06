@@ -21,6 +21,15 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+        public String getEmail() {
+        return this.email;
+    }
+    
+    // (You likely also need a setter to save data)
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     @Column(nullable = false)
     private String password;
 

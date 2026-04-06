@@ -151,6 +151,37 @@
         .overlay { position: fixed; inset: 0; background: rgba(45, 27, 27, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(8px); }
         .otp-card { background: white; padding: 50px; border-radius: 40px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 30px 60px rgba(0,0,0,0.2); }
         .otp-display { font-size: 48px; font-weight: 800; letter-spacing: 10px; color: var(--accent-coral); margin: 25px 0; padding: 20px; border: 3px dashed var(--accent-coral); border-radius: 20px; background: #fffafa; }
+   
+        /* Make sure .otp-card has position: relative so the close button stays inside it */
+        .otp-card { 
+            position: relative; 
+            background: white; 
+            padding: 50px; 
+            border-radius: 40px; 
+            text-align: center; 
+            max-width: 400px; 
+            width: 90%; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2); 
+        }
+
+        /* The new Close Button styling */
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: none;
+            border: none;
+            font-size: 32px;
+            color: #ccc;
+            cursor: pointer;
+            transition: 0.2s;
+            line-height: 1;
+        }
+        .close-btn:hover {
+            color: var(--accent-coral);
+            transform: scale(1.1);
+        }
+   
     </style>
 </head>
 <body>
@@ -202,6 +233,7 @@
 
 <div class="overlay" id="otpOverlay">
     <div class="otp-card">
+        <button class="close-btn" onclick="closeOtpOverlay()">×</button>
         <div style="font-size: 60px; margin-bottom: 10px;" id="otpIcon">🎁</div>
         <h2 style="font-size: 28px; font-weight: 800;" id="otpTitle">Claim Successful!</h2>
         <p style="color: #777; font-weight: 500;" id="otpSubtext">Show this code to the donor at the location</p>
@@ -333,6 +365,9 @@
     }
 
     window.onload = loadDetails;
+    function closeOtpOverlay() {
+        document.getElementById('otpOverlay').style.display = 'none';
+    }
 </script>
 
 </body>

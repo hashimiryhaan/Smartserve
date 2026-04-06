@@ -36,16 +36,21 @@ public class ClaimController {
     @PostMapping("/add")
     public ResponseEntity<?> placeClaim(@RequestBody Claim claimRequest) {
         try {
-            // We need to fetch the User to grab their Role and Name for your Charity tracking
+            // We need to fetch the User to grab their Role, Name, and EMAIL!
             if (claimRequest.getClaimant() != null && claimRequest.getClaimant().getId() != null) {
                 User claimant = userRepository.findById(claimRequest.getClaimant().getId())
                         .orElseThrow(() -> new RuntimeException("User not found"));
                 
+                // --- THE CRITICAL FIX ---
+                // Put the fully loaded user (with the email) back into the claim!
+                claimRequest.setClaimant(claimant); 
+                // ------------------------
+
                 claimRequest.setClaimerType(claimant.getRole() != null ? claimant.getRole().name() : "USER");
                 claimRequest.setClaimerName(claimant.getName());
             }
 
-            // claimRequest now automatically contains the 'claimedQuantity' from the frontend!
+            // claimRequest now automatically contains the 'claimedQuantity' AND the full User!
             Claim savedClaim = claimService.createClaim(claimRequest);
             
             return ResponseEntity.ok(savedClaim);

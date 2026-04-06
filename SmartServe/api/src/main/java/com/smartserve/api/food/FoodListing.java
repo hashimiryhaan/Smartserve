@@ -23,6 +23,10 @@ public class FoodListing {
     @Column(nullable = false)
     private String title;
 
+    public String getTitle() {
+        return this.title;
+    }
+    
     private String description; 
 
     @Column(nullable = false)
