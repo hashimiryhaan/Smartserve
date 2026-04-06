@@ -29,6 +29,9 @@ public class ClaimController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private EmailService emailService;
+
     /**
      * 1. Place a Claim (UPDATED FOR JSON PAYLOAD)
      * We now use @RequestBody so Spring Boot reads the JSON payload sent from item-details.html
@@ -100,33 +103,54 @@ public class ClaimController {
     @PostMapping("/cancel/{id}")
     @Transactional
     public ResponseEntity<?> cancelClaim(@PathVariable Integer id) {
-        Claim claim = claimRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Claim not found"));
+        try {
+            Claim claim = claimRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Claim not found"));
 
-        if (claim.getStatus() == Claim.ClaimStatus.PENDING) {
-            claim.setStatus(Claim.ClaimStatus.CANCELLED);
-            claimRepository.save(claim);
+            if (claim.getStatus() == Claim.ClaimStatus.PENDING) {
+                // 1. Update Status
+                claim.setStatus(Claim.ClaimStatus.CANCELLED);
+                claimRepository.save(claim);
 
-            FoodListing food = claim.getFood();
-            if (food != null) {
-                // Restore the exact amount that was booked
+                // 2. Restore Food Quantity safely
+                FoodListing food = claim.getFood();
                 int qtyToRestore = claim.getClaimedQuantity() != null ? claim.getClaimedQuantity() : 1;
-                food.setQuantity(food.getQuantity() + qtyToRestore);
                 
-                // If the item was hidden because it hit 0, make it available again
-                if (food.getStatus() == FoodListing.ListingStatus.CLAIMED) {
-                    food.setStatus(FoodListing.ListingStatus.AVAILABLE);
+                if (food != null) {
+                    // Safe math: default to 0 if quantity is somehow null
+                    int currentQty = food.getQuantity() != null ? food.getQuantity() : 0;
+                    food.setQuantity(currentQty + qtyToRestore);
+                    
+                    if (food.getStatus() == FoodListing.ListingStatus.CLAIMED) {
+                        food.setStatus(FoodListing.ListingStatus.AVAILABLE);
+                    }
+                    foodListingRepository.save(food);
                 }
-                
-                foodListingRepository.save(food);
-            }
 
-            return ResponseEntity.ok(Map.of("message", "Claim cancelled and food restored."));
-        } else {
-            return ResponseEntity.badRequest().body(Map.of("message", "Cannot cancel a claim that is already verified or cancelled."));
+                // 3. Trigger Email safely
+                try {
+                    if (claim.getClaimant() != null && claim.getClaimant().getEmail() != null) {
+                        emailService.sendCancellationEmail(
+                            claim.getClaimant().getEmail(), 
+                            food != null && food.getTitle() != null ? food.getTitle() : "Unknown Item", 
+                            qtyToRestore
+                        );
+                    }
+                } catch (Exception emailEx) {
+                    System.err.println("Cancellation email failed: " + emailEx.getMessage());
+                }
+
+                return ResponseEntity.ok(Map.of("message", "Claim cancelled successfully."));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("message", "Cannot cancel a claim that is already verified or cancelled."));
+            }
+        } catch (Exception e) {
+            // This catches ANY crash and sends the exact error message to the frontend!
+            e.printStackTrace(); 
+            String errorMsg = e.getMessage() != null ? e.getMessage() : "Internal Server Error. Check Spring Boot console.";
+            return ResponseEntity.status(500).body(Map.of("message", errorMsg));
         }
     }
-
     @GetMapping
     public ResponseEntity<List<Claim>> getAllClaims() {
         try {
