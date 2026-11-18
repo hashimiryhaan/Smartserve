@@ -1,0 +1,5 @@
+# Local environment and secret overrides
+.env
+*.env
+src/main/resources/application-local.properties
+src/main/resources/application-prod.properties
