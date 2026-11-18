@@ -10,7 +10,6 @@
             --brand-primary: #5D54B1;
             --brand-light: #7E74D1;
             --accent: #BC8FA0;
-            --charity-blue: #2D63ED; /* Branding for Charity features */
             --bg-gradient: linear-gradient(135deg, #f8f9ff 0%, #fcfaff 100%);
             --white: #ffffff;
             --text-dark: #1A1C1E;
@@ -57,7 +56,7 @@
             transition: all 0.3s ease;
         }
 
-        .stats-bar { padding: 40px 6% 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px; }
+        .stats-bar { padding: 40px 6% 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
         .stat-card { background: white; padding: 25px; border-radius: 20px; box-shadow: var(--shadow-premium); border: 1px solid rgba(255,255,255,0.6); }
         .stat-card p { font-size: 11px; font-weight: 800; color: var(--text-muted); margin-bottom: 5px; }
         .stat-card h2 { font-size: 28px; font-weight: 800; }
@@ -73,19 +72,6 @@
         }
         .add-card-btn:hover { transform: translateY(-3px); }
 
-        /* USER MENU STYLES */
-        .user-pill {
-            display: flex; align-items: center; gap: 10px;
-            padding: 5px 12px 5px 6px; background: #fff;
-            border-radius: 50px; border: 1px solid #E4E4E7;
-            cursor: pointer;
-        }
-        .avatar-small { 
-            width: 32px; height: 32px; border-radius: 50%; background: var(--brand-primary);
-            color: white; display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 14px;
-        }
-
         /* CLAIMS TABLE STYLES */
         .claims-section { padding: 0 6% 20px; }
         .claims-table-container { 
@@ -95,13 +81,6 @@
         .claims-table { width: 100%; border-collapse: collapse; text-align: left; }
         .claims-table th { padding: 15px 20px; background: #f8f9ff; font-size: 11px; font-weight: 800; color: var(--text-muted); }
         .claims-table td { padding: 15px 20px; border-bottom: 1px solid #f4f4f5; }
-
-        /* New Charity Connection Styles */
-        .badge {
-            padding: 4px 10px; border-radius: 50px; font-size: 10px; font-weight: 800; text-transform: uppercase;
-        }
-        .badge-charity { background: var(--charity-blue); color: white; }
-        .badge-user { background: #E4E4E7; color: var(--text-dark); }
 
         .grid-container { padding: 20px 6% 60px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 35px; }
         
@@ -157,19 +136,11 @@
             <div class="logo">SMART<span>SERVE</span></div>
         </div>
         <div class="search-container">
-            <input type="text" class="search-bar" aria-label="Search listings" placeholder="Search your listings..." oninput="handleSearch(this.value)">
+            <input type="text" class="search-bar" placeholder="Search your listings..." oninput="handleSearch(this.value)">
         </div>
-        <div class="nav-right" style="display:flex; gap:12px; align-items:center;">
-            
-            <button class="icon-btn" onclick="window.location.href='history.html'" aria-label="Activity History" title="View History">📜</button>
-            
-            <button class="icon-btn" aria-label="Notifications">🔔</button>
-            
-            <div class="user-pill" onclick="window.location.href='index.html'">
-                <div class="avatar-small" id="headerAvatar">U</div>
-                <span id="userNameHeader" style="font-size: 13px; font-weight: 700;">User</span>
-            </div>
-            
+        <div class="nav-right" style="display:flex; gap:10px;">
+            <button class="icon-btn">🔔</button>
+            <button class="icon-btn">👤</button>
         </div>
     </nav>
 
@@ -186,16 +157,12 @@
             <p>TOTAL REVENUE (₹)</p>
             <h2 id="revenueCount" style="color: var(--accent);">0</h2>
         </div>
-        <div class="stat-card">
-            <p>CHARITY CONNECTS</p>
-            <h2 id="charityCount" style="color: var(--charity-blue);">0</h2>
-        </div>
     </div>
 
     <section class="hero-banner" style="margin-top: 30px; padding-bottom: 5px;">
         <div class="hero-text">
-            <h1 style="font-size: 28px;">Pickups</h1>
-            <p>Confirm the 4-digit OTP shown on the Charity/User's device</p>
+            <h1 style="font-size: 28px;">Pending Pickups</h1>
+            <p>Confirm the 4-digit OTP shown in the database</p>
         </div>
     </section>
 
@@ -205,8 +172,6 @@
                 <thead>
                     <tr>
                         <th>CLAIM ID</th>
-                        <th>TYPE</th>
-                        <th>CLAIMER NAME</th>
                         <th>ITEM TITLE</th>
                         <th>CLAIMED AT</th>
                         <th>ACTION</th>
@@ -234,87 +199,36 @@
                 <h2 id="panelTitle" style="font-size:24px; font-weight:800;">New Listing</h2>
                 <div style="cursor:pointer; font-size:24px;" onclick="toggleForm(false)">✕</div>
             </div>
-            
             <input type="hidden" id="editId">
-            
-            <label class="form-label">Listing Mode</label>
-            <div class="chip-group" style="margin-bottom: 10px;">
-                <div class="chip active" id="mode-SALE" onclick="selectMode('SALE')">Marketplace Sale</div>
-                <div class="chip" id="mode-DONATION" onclick="selectMode('DONATION')">Charity Rescue (Free)</div>
-            </div>
-
-            <label class="form-label" for="foodFile">Food Photo</label>
+            <label class="form-label">Food Photo</label>
             <input type="file" id="foodFile" class="form-input" accept="image/*">
-            
-            <label class="form-label" for="foodName">Item Name</label>
+            <label class="form-label">Item Name</label>
             <input type="text" id="foodName" class="form-input">
-            
             <label class="form-label">Category</label>
-    <div class="chip-group">
-        <div class="chip active" id="chip-Vegetarian" onclick="selectChip(this, 'Vegetarian')">Vegetarian</div>
-        <div class="chip" id="chip-Non-Vegetarian" onclick="selectChip(this, 'Non-Vegetarian')">Non-Vegetarian</div>
-    </div>
-            
+            <div class="chip-group">
+                <div class="chip" id="chip-Wedding" onclick="selectChip(this, 'Wedding')">Wedding</div>
+                <div class="chip active" id="chip-Restaurant" onclick="selectChip(this, 'Restaurant')">Restaurant</div>
+                <div class="chip" id="chip-Individual" onclick="selectChip(this, 'Individual')">Individual</div>
+            </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
                 <div><label class="form-label">Quantity</label><input type="text" id="qty" class="form-input"></div>
                 <div><label class="form-label">Pickup Time</label><input type="text" id="pickupTime" class="form-input"></div>
             </div>
-            
             <label class="form-label">Pickup Address</label>
             <input type="text" id="loc" class="form-input">
-            
-            <div id="priceFields" style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
                 <div><label class="form-label">Original Price (₹)</label><input type="number" id="originalPrice" class="form-input"></div>
                 <div><label class="form-label">Offer Price (₹)</label><input type="number" id="discountedPrice" class="form-input"></div>
             </div>
-            
             <button class="submit-btn" id="saveBtn" onclick="saveData()">PUBLISH NOW</button>
         </div>
     </div>
 
     <script>
-        const API_BASE = "http://localhost:8080/api/food";
-        const CLAIM_API = "http://localhost:8080/api/claims";
+        const API_BASE = "https://smartserve-api-lolg.onrender.com/api/food";
+        const CLAIM_API = "https://smartserve-api-lolg.onrender.com/api/claims";
         let currentCategory = "Restaurant";
-        let currentMode = "SALE";
         let allItems = [];
-        let savedUserId = null;
-
-        function initUser() {
-            const sid = localStorage.getItem('ss_id');
-            const sname = localStorage.getItem('ss_name');
-            const semail = localStorage.getItem('ss_email');
-
-            if (!sid) {
-                alert("Please log in to access the Donor Dashboard.");
-                window.location.href = "index.html";
-                return;
-            }
-
-            savedUserId = sid;
-            const displayName = sname || semail.split('@')[0];
-            const headerName = document.getElementById('userNameHeader');
-            if(headerName) headerName.innerText = displayName;
-            
-            const av = document.getElementById('headerAvatar');
-            if(av) av.innerText = displayName.charAt(0).toUpperCase();
-        }
-
-        function selectMode(mode) {
-            currentMode = mode;
-            document.getElementById('mode-SALE').classList.toggle('active', mode === 'SALE');
-            document.getElementById('mode-DONATION').classList.toggle('active', mode === 'DONATION');
-            
-            const priceFields = document.getElementById('priceFields');
-            if (mode === 'DONATION') {
-                priceFields.style.opacity = '0.5';
-                priceFields.style.pointerEvents = 'none';
-                document.getElementById('discountedPrice').value = 0;
-            } else {
-                priceFields.style.opacity = '1';
-                priceFields.style.pointerEvents = 'auto';
-            }
-        }
 
         function toggleForm(show) {
             document.getElementById('formOverlay').classList.toggle('active', show);
@@ -333,10 +247,10 @@
             document.getElementById('foodName').value = "";
             document.getElementById('qty').value = "";
             document.getElementById('pickupTime').value = "";
+            document.getElementById('loc').value = "";
             document.getElementById('originalPrice').value = "";
             document.getElementById('discountedPrice').value = "";
             document.getElementById('foodFile').value = "";
-            selectMode('SALE');
         }
 
         function selectChip(el, val) {
@@ -347,50 +261,33 @@
 
         async function loadData() {
             try {
-                // FIX 1: Fetch ALL food, then filter for the logged-in donor
+                // 1. Load Listings
                 const res = await fetch(API_BASE);
-                const allFetchedItems = await res.json();
-                
-                // Keep only items where the donor ID matches the logged-in user
-                allItems = allFetchedItems.filter(item => item.donor && item.donor.id == savedUserId);
-                
+                allItems = await res.json();
                 updateStats(allItems);
                 renderItems(allItems);
 
-                // Fetch pending claims
-                const claimRes = await fetch(`${CLAIM_API}`);
+                // 2. Load Pending Claims (Matches your SQL structure)
+                const claimRes = await fetch(`${CLAIM_API}/pending`);
                 const claims = await claimRes.json();
-                
-                // IMPORTANT: Filter claims so the donor only sees pickups for THEIR food
-                const myClaims = claims.filter(c => c.food && c.food.donor && c.food.donor.id == savedUserId);
-                renderPendingClaims(myClaims);
+                renderPendingClaims(claims);
 
-            } catch (e) { 
-                console.error("Load failed. Ensure backend is running.", e); 
-            }
+            } catch (e) { console.error("Load failed", e); }
         }
 
         function renderPendingClaims(claims) {
             const list = document.getElementById('claimsList');
+            // Filter only PENDING items just in case
             const pending = claims.filter(c => c.status === 'PENDING');
             
             if (pending.length === 0) {
-                list.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">No pickups scheduled.</td></tr>`;
+                list.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:#999;">No pickups scheduled.</td></tr>`;
                 return;
             }
 
-            list.innerHTML = pending.map(c => {
-                // FIX 2: Force "CHARITY" badge if the item was listed as a DONATION
-                const isCharity = c.claimerType === 'CHARITY' || (c.food && c.food.listingType === 'DONATION');
-                
-                const badgeClass = isCharity ? 'badge-charity' : 'badge-user';
-                const label = isCharity ? 'CHARITY' : 'CUSTOMER';
-
-                return `
+            list.innerHTML = pending.map(c => `
                 <tr>
                     <td style="font-weight:800;">#${c.id}</td>
-                    <td><span class="badge ${badgeClass}">${label}</span></td>
-                    <td style="font-weight:700;">${c.claimerName || 'Volunteer'}</td>
                     <td style="font-weight:600;">${c.food ? c.food.title : 'Food Item'}</td>
                     <td style="color:#666; font-size:13px;">${c.claimedat || 'N/A'}</td>
                     <td>
@@ -400,20 +297,21 @@
                         </button>
                     </td>
                 </tr>
-            `}).join('');
+            `).join('');
         }
 
         async function verifyClaim(id) {
-            const otp = prompt("Volunteer/Customer is showing OTP. Please verify:");
+            const otp = prompt("Customer is showing OTP. Please verify:");
             if (!otp) return;
 
             try {
+                // This calls your @PostMapping("/{id}/verify")
                 const res = await fetch(`${CLAIM_API}/${id}/verify?otp=${otp}`, { method: 'POST' });
                 if (res.ok) {
-                    alert("✅ Handshake Successful! Delivery confirmed.");
+                    alert("✅ Success! OTP verified and food marked as delivered.");
                     loadData(); 
                 } else {
-                    alert("❌ Incorrect OTP. Please verify with the representative.");
+                    alert("❌ Incorrect OTP. Please check again.");
                 }
             } catch (e) { alert("Server error."); }
         }
@@ -422,11 +320,6 @@
             document.getElementById('activeCount').innerText = items.length;
             const revenue = items.reduce((sum, i) => sum + (parseFloat(i.discountedPrice) || 0), 0);
             document.getElementById('revenueCount').innerText = revenue.toLocaleString();
-            
-            // NEW: Count items marked as DONATION (Charity Rescue)
-            const charityConnections = items.filter(i => i.listingType === 'DONATION').length;
-            document.getElementById('charityCount').innerText = charityConnections;
-            
             document.getElementById('mealsCount').innerText = items.length * 5; 
         }
 
@@ -434,23 +327,18 @@
             const grid = document.getElementById('listingGrid');
             grid.innerHTML = items.map(item => {
                 let rawImageUrl = item.imageUrl || '';
-                let finalFullUrl = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
-                
-                if (rawImageUrl && rawImageUrl.trim() !== '') {
+                let finalFullUrl = '';
+                if (rawImageUrl) {
                     if (rawImageUrl.startsWith('http')) finalFullUrl = rawImageUrl;
-                    else if (rawImageUrl.startsWith('/uploads/')) finalFullUrl = `http://localhost:8080${rawImageUrl}`;
-                    else finalFullUrl = `http://localhost:8080/uploads/${rawImageUrl}`;
+                    else if (rawImageUrl.startsWith('/uploads/')) finalFullUrl = `https://smartserve-api-lolg.onrender.com${rawImageUrl}`;
+                    else finalFullUrl = `https://smartserve-api-lolg.onrender.com/uploads/${rawImageUrl}`;
                 }
-
-                const isDonation = item.listingType === 'DONATION';
 
                 return `
                 <div class="food-card">
                     <div class="img-box">
-                        <span class="status-tag" style="background:${isDonation ? '#2D63ED' : '#22C55E'}">
-                            ${isDonation ? 'CHARITY RESCUE' : 'MARKETPLACE'}
-                        </span>
-                        <img src="${finalFullUrl}" class="card-img" alt="Food item image" onerror="this.src='...'">
+                        <span class="status-tag">${item.status || 'AVAILABLE'}</span>
+                        <img src="${finalFullUrl}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'" alt="food">
                     </div>
                     <div class="card-info">
                         <div class="card-cat">${item.category ? item.category.name : 'RESTAURANT'} • ${item.pickupTime || ''}</div>
@@ -458,7 +346,7 @@
                         <div class="card-footer">
                             <div>
                                 <span class="old-price">₹${item.originalPrice}</span>
-                                <span class="price-tag">${isDonation ? 'FREE' : '₹' + item.discountedPrice}</span>
+                                <span class="price-tag">₹${item.discountedPrice}</span>
                             </div>
                             <div style="display:flex; gap:8px;">
                                 <button class="icon-btn" onclick="editItem(${item.id})">✏️</button>
@@ -470,105 +358,47 @@
             }).join('');
         }
 
-
         async function editItem(id) {
-            // 1. Find the item using == to prevent type mismatch issues
-            const item = allItems.find(i => i.id == id);
-            if(!item) {
-                console.error("Item not found!");
-                return;
-            }
-            
-            // 2. Change the Form Title and Button Text
+            const item = allItems.find(i => i.id === id);
+            if(!item) return;
             document.getElementById('panelTitle').innerText = "Edit Listing";
             document.getElementById('saveBtn').innerText = "UPDATE CHANGES";
-            
-            // 3. Populate Text Fields
             document.getElementById('editId').value = item.id;
             document.getElementById('foodName').value = item.title;
             document.getElementById('qty').value = item.quantity;
-            document.getElementById('pickupTime').value = item.pickupTime || '';
-            document.getElementById('loc').value = item.addressText || '';
-            document.getElementById('originalPrice').value = item.originalPrice || '';
-            document.getElementById('discountedPrice').value = item.discountedPrice || '';
-            
-            // 4. Highlight the correct Category Chip (Vegetarian vs Non-Vegetarian)
-            if (item.category && item.category.name) {
-                const chip = document.getElementById('chip-' + item.category.name);
-                if (chip) selectChip(chip, item.category.name);
-            }
-
-            // 5. Highlight the correct Listing Mode Chip (SALE vs DONATION)
-            if (item.listingType) {
-                selectMode(item.listingType);
-            } else {
-                selectMode('SALE'); // Fallback just in case
-            }
-            
-            // 6. Slide the panel open!
+            document.getElementById('pickupTime').value = item.pickupTime;
+            document.getElementById('loc').value = item.addressText;
+            document.getElementById('originalPrice').value = item.originalPrice;
+            document.getElementById('discountedPrice').value = item.discountedPrice;
             toggleForm(true);
         }
 
-       async function saveData() {
-    const editId = document.getElementById('editId').value;
-    const fileInput = document.getElementById('foodFile');
-    const actionBtn = document.getElementById('saveBtn');
-    
-    actionBtn.innerText = "PUBLISHING...";
-    actionBtn.disabled = true;
+        async function saveData() {
+            const editId = document.getElementById('editId').value;
+            const fileInput = document.getElementById('foodFile');
+            if (!editId && fileInput.files.length === 0) return alert("Please upload a photo");
 
-    // 1. Safely handle empty prices by defaulting to 0
-    const rawOriginalPrice = document.getElementById('originalPrice').value;
-    const rawDiscountPrice = document.getElementById('discountedPrice').value;
-    
-   let catId = 1; // Default to Veg
-    if (currentCategory === 'Non-Vegetarian') catId = 2;
+            const formData = new FormData();
+            const foodData = {
+                title: document.getElementById('foodName').value,
+                quantity: document.getElementById('qty').value,
+                pickupTime: document.getElementById('pickupTime').value,
+                addressText: document.getElementById('loc').value,
+                originalPrice: document.getElementById('originalPrice').value,
+                discountedPrice: document.getElementById('discountedPrice').value,
+                category: { id: currentCategory === 'Wedding' ? 1 : 2 },
+                donor: { id: 1 } 
+            };
+            if(editId) foodData.id = editId;
+            if(fileInput.files[0]) formData.append("file", fileInput.files[0]);
+            formData.append("data", new Blob([JSON.stringify(foodData)], { type: "application/json" }));
 
-    const formData = new FormData();
-    const foodData = {
-        title: document.getElementById('foodName').value,
-        quantity: document.getElementById('qty').value,
-        pickupTime: document.getElementById('pickupTime').value,
-        addressText: document.getElementById('loc').value,
-        originalPrice: rawOriginalPrice ? parseFloat(rawOriginalPrice) : 0.0,
-        discountedPrice: rawDiscountPrice ? parseFloat(rawDiscountPrice) : 0.0,
-        listingType: currentMode, // 'SALE' or 'DONATION'
-        category: { id: catId },
-        donor: { id: savedUserId }
-    };
-
-    if (editId) foodData.id = editId;
-    if (fileInput.files[0]) formData.append("file", fileInput.files[0]);
-    
-    // Append the JSON data as a Blob
-    formData.append("data", new Blob([JSON.stringify(foodData)], { type: "application/json" }));
-
-    try {
-        const url = editId ? `${API_BASE}/update` : `${API_BASE}/add`;
-        const res = await fetch(url, { 
-            method: editId ? 'PUT' : 'POST', 
-            body: formData 
-        });
-        
-        if (res.ok) { 
-            toggleForm(false); 
-            loadData(); 
-            actionBtn.innerText = "PUBLISH NOW";
-            actionBtn.disabled = false;
-        } else {
-            const errorData = await res.text();
-            console.error("Backend Error:", errorData);
-            alert("Failed to publish. Backend rejected the data. Check console for details.");
-            actionBtn.innerText = "PUBLISH NOW";
-            actionBtn.disabled = false;
+            try {
+                const url = editId ? `${API_BASE}/update` : `${API_BASE}/add`;
+                const res = await fetch(url, { method: editId ? 'PUT' : 'POST', body: formData });
+                if (res.ok) { toggleForm(false); loadData(); }
+            } catch (e) { alert("Action failed."); }
         }
-    } catch (e) { 
-        console.error("Network/CORS Error:", e);
-        alert("Network error. Ensure Spring Boot is running and CORS is enabled.");
-        actionBtn.innerText = "PUBLISH NOW";
-        actionBtn.disabled = false;
-    }
-}
 
         async function deleteItem(id) {
             if(!confirm("Remove listing?")) return;
@@ -581,10 +411,7 @@
             renderItems(filtered);
         }
 
-        window.onload = function() {
-            initUser();
-            loadData();
-        };
+        window.onload = loadData;
     </script>
 </body>
 </html>

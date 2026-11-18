@@ -12,7 +12,6 @@
             --text-dark: #1A1C1E;
             --bg-gray: #F8FAFC;
             --success: #2E7D32;
-            --charity-blue: #2D63ED; /* New Brand Color for Charity Features */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,6 +27,7 @@
         .logo span { color: var(--brand-primary); }
         
         .nav-right { display: flex; gap: 20px; align-items: center; }
+        .search-bar { padding: 12px 24px; border-radius: 50px; border: 1px solid #E2E8F0; width: 280px; background: #F8FAFC; outline: none; }
 
         .refresh-btn {
             background: white; border: 1.5px solid var(--brand-primary); color: var(--brand-primary); 
@@ -35,19 +35,6 @@
             font-weight: 700; transition: 0.3s; display: flex; align-items: center; gap: 6px;
         }
         .refresh-btn:hover { background: var(--brand-primary); color: white; }
-
-        .user-profile-pill {
-            display: flex; align-items: center; gap: 10px;
-            padding: 4px 12px 4px 4px; border-radius: 50px;
-            background: #f1f5f9; cursor: pointer; border: 1px solid transparent;
-            transition: 0.2s;
-        }
-        .user-profile-pill:hover { border-color: var(--brand-primary); }
-        .user-avatar {
-            width: 32px; height: 32px; background: var(--brand-primary);
-            border-radius: 50%; color: white; display: flex;
-            align-items: center; justify-content: center; font-weight: 800; font-size: 13px;
-        }
 
         .main-content { display: grid; grid-template-columns: 350px 1fr; height: calc(100vh - 76px); }
         .sidebar { padding: 30px; background: var(--bg-gray); overflow-y: auto; border-right: 1px solid #F1F5F9; }
@@ -59,17 +46,12 @@
             font-weight: 700; font-size: 13px; margin-bottom: 20px;
         }
 
-        /* --- Integrated Search Bar --- */
-        .search-container { margin-bottom: 30px; width: 100%; max-width: 600px; position: relative; }
-        .marketplace-search { 
-            width: 100%; padding: 16px 28px; border-radius: 16px; 
-            border: 1px solid #E2E8F0; background: #F8FAFC; 
-            font-family: inherit; font-size: 15px; font-weight: 600; outline: none; transition: 0.3s;
+        .filter-bar { display: flex; gap: 12px; margin-bottom: 25px; }
+        .filter-chip { 
+            padding: 10px 24px; border-radius: 50px; border: 1px solid #E2E8F0; 
+            font-weight: 700; cursor: pointer; background: white; font-size: 14px;
         }
-        .marketplace-search:focus { 
-            border-color: var(--brand-primary); background: white; 
-            box-shadow: 0 10px 25px rgba(255,107,107,0.1); 
-        }
+        .filter-chip.active { background: var(--brand-dark); color: white; border-color: var(--brand-dark); }
 
         .status-msg { font-size: 13px; color: #64748B; font-weight: 600; margin-bottom: 25px; display: flex; align-items: center; gap: 6px; }
 
@@ -79,7 +61,6 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.04); transition: 0.4s;
             text-decoration: none; color: inherit; border: 1px solid #F1F5F9;
             display: flex; flex-direction: column;
-            position: relative;
         }
         .food-card:hover { transform: translateY(-8px); border-color: var(--brand-primary); }
         
@@ -93,15 +74,9 @@
         }
 
         .card-body { padding: 20px; flex-grow: 1; }
-        .card-title { font-size: 19px; font-weight: 800; margin-bottom: 5px; color: var(--brand-dark); display: flex; align-items: center; gap: 6px; }
-
-        .verified-badge-icon {
-            display: inline-flex; align-items: center; justify-content: center;
-            width: 16px; height: 16px; background-color: #2D63ED; color: white;
-            border-radius: 50%; font-size: 10px; font-weight: bold; flex-shrink: 0;
-        }
-
+        .card-title { font-size: 19px; font-weight: 800; margin-bottom: 5px; color: var(--brand-dark); }
         .location-text { font-size: 13px; color: #64748B; margin-bottom: 15px; display: flex; align-items: center; gap: 4px; }
+        
         .price-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
         .discount-price { font-size: 18px; font-weight: 800; color: var(--success); }
         .original-price { font-size: 14px; color: #94A3B8; text-decoration: line-through; }
@@ -112,80 +87,6 @@
         }
         .qty-text { font-size: 13px; font-weight: 700; color: var(--brand-primary); }
         .pickup-tag { font-size: 11px; font-weight: 600; color: #64748B; background: #F1F5F9; padding: 4px 8px; border-radius: 6px; }
-
-        /* --- New Charity Styles --- */
-        .charity-connect-overlay {
-            padding: 12px;
-            background: #fff;
-            border-top: 1px solid #F1F5F9;
-        }
-        .connect-btn {
-            width: 100%;
-            background: var(--charity-blue);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 800;
-            font-size: 13px;
-            cursor: pointer;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .connect-btn:hover {
-            background: #1a4bc4;
-            transform: scale(0.98);
-        }
-        .role-badge {
-            background: var(--charity-blue);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 50px;
-            font-size: 10px;
-            font-weight: 800;
-            margin-left: 8px;
-        }
-
-        /* --- Booking Slide-Out Panel --- */
-        .overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.4); 
-            backdrop-filter: blur(4px); z-index: 2000; 
-            display: none; justify-content: flex-end;
-        }
-        .overlay.active { display: flex; }
-        .side-panel {
-            width: 100%; max-width: 450px; background: #fff; height: 100%; 
-            padding: 40px; overflow-y: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.1); 
-            animation: slideIn 0.3s ease; display: flex; flex-direction: column;
-        }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        
-        /* Summary Card */
-        .summary-card { 
-            display: flex; gap: 15px; background: #F8FAFC; padding: 15px; 
-            border-radius: 16px; margin-bottom: 30px; border: 1px solid #E2E8F0;
-        }
-        .summary-img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; }
-        .summary-info { display: flex; flex-direction: column; justify-content: center; }
-        .summary-title { font-size: 18px; font-weight: 800; color: var(--brand-dark); }
-        .summary-price { font-size: 16px; font-weight: 700; color: var(--success); margin-top: 5px; }
-
-        /* Quantity Controls */
-        .qty-controls { 
-            display: flex; align-items: center; gap: 15px; margin: 15px 0; 
-            background: #F8FAFC; padding: 10px; border-radius: 12px; 
-            width: fit-content; border: 1px solid #E2E8F0;
-        }
-        .qty-btn { 
-            width: 36px; height: 36px; border-radius: 8px; border: none; 
-            background: white; font-size: 18px; font-weight: bold; cursor: pointer; 
-            color: var(--brand-dark); box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s;
-        }
-        .qty-btn:hover { background: #E2E8F0; }
-        .qty-display { font-size: 18px; font-weight: 800; min-width: 30px; text-align: center; }
     </style>
 </head>
 <body>
@@ -197,23 +98,14 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
                 Refresh Location
             </button>
-            
-            <div class="user-profile-pill" onclick="window.location.href='index.html'">
-                <div class="user-avatar" id="headerAvatar">U</div>
-                <span id="userNameHeader" style="font-size: 13px; font-weight: 700;">User</span>
-                <span id="roleBadge" class="role-badge" style="display:none;">CHARITY</span>
-            </div>
+            <input type="text" class="search-bar" placeholder="Find surplus near you...">
+            <a href="index.html" style="text-decoration:none; color:var(--brand-dark); font-weight:700; font-size:14px;">Home</a>
+            <div style="width:35px; height:35px; background:var(--brand-primary); border-radius:50%; color:white; display:flex; align-items:center; justify-content:center; font-weight:800;">U</div>
         </div>
     </nav>
 
     <div class="main-content">
         <aside class="sidebar">
-            <div id="userPointsCard" style="background:linear-gradient(135deg, #FF6B6B, #FF8E8E); padding:25px; border-radius:24px; color:white; margin-bottom:30px; box-shadow: 0 10px 20px rgba(255,107,107,0.2);">
-                <p style="font-size:11px; font-weight:800; text-transform:uppercase; opacity:0.9;">Impact Points</p>
-                <h2 style="font-size:32px; font-weight:800;">1,240</h2>
-                <p style="font-size:12px; font-weight:600; margin-top:5px;">Helping the community 🌿</p>
-            </div>
-
             <h3 style="font-size:16px; font-weight:800; margin-bottom:20px;">Top Community Donors</h3>
             <div style="background:white; padding:20px; border-radius:20px; border:1px solid #E2E8F0; margin-bottom:15px;">
                 <p style="font-weight:800;">Grand Hyatt Kochi</p>
@@ -231,8 +123,10 @@
                 Back to Dashboard
             </a>
 
-            <div class="search-container">
-                <input type="text" class="marketplace-search" aria-label="Search listings" id="searchInput" oninput="handleSearch()" placeholder="Search for food, restaurants, or events (e.g. 'Wedding')...">
+            <div class="filter-bar">
+                <div class="filter-chip active">All Food</div>
+                <div class="filter-chip">Restaurant</div>
+                <div class="filter-chip">Weddings</div>
             </div>
 
             <p class="status-msg" id="statusLabel">Initializing SmartServe Location...</p>
@@ -241,193 +135,12 @@
         </main>
     </div>
 
-    <div class="overlay" id="bookingOverlay">
-        <div class="side-panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 30px;">
-                <h2 id="panelTitle" style="font-size:24px; font-weight:800;">Confirm Booking</h2>
-                <div style="cursor:pointer; font-size:24px;" onclick="closeBookingPanel()">✕</div>
-            </div>
-
-            <div class="summary-card">
-                <img src="" id="panelImg" class="summary-img">
-                <div class="summary-info">
-                    <div class="summary-title" id="panelFoodName">Food Name</div>
-                    <div class="summary-price" id="panelPrice">Free</div>
-                </div>
-            </div>
-
-            <label style="font-size:12px; font-weight:800; color:#64748B; text-transform:uppercase;">Select Quantity</label>
-            <div class="qty-controls">
-                <button class="qty-btn" onclick="changeQty(-1)">-</button>
-                <div class="qty-display" id="panelQty">1</div>
-                <button class="qty-btn" onclick="changeQty(1)">+</button>
-            </div>
-            <p style="font-size:13px; color:#64748B; margin-top:-5px; margin-bottom: 30px;">Available: <span id="panelMaxQty">0</span></p>
-
-            <div style="margin-top: auto;">
-                <button id="confirmBookingBtn" class="connect-btn" style="padding: 18px; font-size: 16px;" onclick="submitBooking()">Confirm Booking</button>
-            </div>
-        </div>
-    </div>
     <script>
-        const API_URL = "http://localhost:8080/api/food"; 
+        const API_URL = "https://smartserve-api-lolg.onrender.com/api/food"; 
+        
+        // --- Kochi Reference Coordinates ---
         const KOCHI_LAT = 10.015;
         const KOCHI_LON = 76.341;
-        let allItems = [];
-        let isCharity = false;
-
-        function initUser() {
-            const sid = localStorage.getItem('ss_id');
-            const sname = localStorage.getItem('ss_name');
-            const semail = localStorage.getItem('ss_email');
-            const srole = localStorage.getItem('ss_role'); // Assuming you set this during login
-
-            if (sid) {
-                const displayName = sname || (semail ? semail.split('@')[0] : 'User');
-                const headerName = document.getElementById('userNameHeader');
-                const headerAvatar = document.getElementById('headerAvatar');
-                const roleBadge = document.getElementById('roleBadge');
-
-                if(headerName) headerName.innerText = displayName;
-                if(headerAvatar) headerAvatar.innerText = displayName.charAt(0).toUpperCase();
-                
-                if (srole === 'charity') {
-                    isCharity = true;
-                    if(roleBadge) roleBadge.style.display = 'inline-block';
-                }
-            }
-        }
-
-        // --- NEW BOOKING PANEL LOGIC ---
-        let selectedFoodItem = null;
-        let selectedQty = 1;
-
-        function openBookingPanel(event, itemId) {
-            event.preventDefault(); event.stopPropagation();
-            
-            const customerId = localStorage.getItem('ss_id');
-            if (!customerId) { alert("Please log in first."); window.location.href = "index.html"; return; }
-
-            // Find the item
-            selectedFoodItem = allItems.find(i => i.id === itemId);
-            if (!selectedFoodItem) return;
-            selectedQty = 1; // Reset to 1 every time panel opens
-            
-            // Populate the Panel Text
-            document.getElementById('panelFoodName').innerText = selectedFoodItem.title;
-            document.getElementById('panelPrice').innerText = selectedFoodItem.listingType === 'DONATION' ? 'FREE' : `₹${selectedFoodItem.discountedPrice}`;
-            document.getElementById('panelQty').innerText = selectedQty;
-            document.getElementById('panelMaxQty').innerText = selectedFoodItem.quantity;
-            
-            // Populate the Image
-            let finalFullUrl = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
-            if (selectedFoodItem.imageUrl) {
-                if (selectedFoodItem.imageUrl.startsWith('http')) finalFullUrl = selectedFoodItem.imageUrl;
-                else finalFullUrl = `http://localhost:8080${selectedFoodItem.imageUrl.startsWith('/') ? '' : '/'}${selectedFoodItem.imageUrl}`;
-            }
-            document.getElementById('panelImg').src = finalFullUrl;
-
-            // Change Colors based on User Role (Charity vs Customer)
-            const btn = document.getElementById('confirmBookingBtn');
-            if (isCharity) {
-                btn.style.background = 'var(--charity-blue)';
-                btn.innerText = "Connect & Rescue";
-                document.getElementById('panelTitle').innerText = "Charity Rescue";
-            } else {
-                btn.style.background = 'var(--brand-primary)';
-                btn.innerText = "Confirm Booking";
-                document.getElementById('panelTitle').innerText = "Confirm Booking";
-            }
-
-            // Slide it open
-            document.getElementById('bookingOverlay').classList.add('active');
-        }
-
-        function closeBookingPanel() {
-            document.getElementById('bookingOverlay').classList.remove('active');
-            selectedFoodItem = null;
-        }
-
-        function changeQty(delta) {
-            if (!selectedFoodItem) return;
-            let newQty = selectedQty + delta;
-            
-            // Don't let them go below 1 or above max available
-            if (newQty >= 1 && newQty <= selectedFoodItem.quantity) {
-                selectedQty = newQty;
-                document.getElementById('panelQty').innerText = selectedQty;
-            }
-        }
-
-        async function submitBooking() {
-            if (!selectedFoodItem) return;
-            const customerId = localStorage.getItem('ss_id');
-            const btn = document.getElementById('confirmBookingBtn');
-            
-            // Save the original text so we can reset it later
-            const originalText = btn.innerText; 
-            
-            btn.innerText = "Processing...";
-            btn.disabled = true;
-
-            const claimData = {
-                food: { id: selectedFoodItem.id },
-                claimant: { id: customerId }, 
-                claimedQuantity: selectedQty 
-            };
-
-            try {
-                const res = await fetch('http://localhost:8080/api/claims', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(claimData)
-                });
-
-                if (res.ok) {
-                    // 1. Parse the JSON response from Spring Boot to get the saved Claim
-                    const savedClaim = await res.json();
-                    
-                    // 2. Show the OTP directly in the popup!
-                    alert(`✅ Successfully booked ${selectedQty} item(s)!\n\n🔑 YOUR OTP IS: ${savedClaim.otp}\n\nPlease show this code to the donor at pickup. You can also find it in your Order History.`);
-                    
-                    closeBookingPanel();
-                    fetchMarketplace(); // Refresh grid to update max quantity numbers
-                } else {
-                    const err = await res.text();
-                    alert("Failed to book: " + err);
-                }
-            } catch (e) {
-                console.error(e);
-                alert("❌ Network error: Could not reach the server.\n\nMake sure Spring Boot is running and @CrossOrigin is added to your ClaimController.");
-            } finally {
-                // 3. THIS FIXES THE STUCK BUTTON! Resets it no matter what happens.
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        }
-        
-        
-
-        function handleSearch() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            const statusLabel = document.getElementById('statusLabel');
-
-            const filteredResults = allItems.filter(item => {
-                const titleMatch = item.title ? item.title.toLowerCase().includes(query) : false;
-                const addressMatch = item.addressText ? item.addressText.toLowerCase().includes(query) : false;
-                const categoryMatch = (item.category && item.category.name) ? item.category.name.toLowerCase().includes(query) : false;
-                
-                return titleMatch || addressMatch || categoryMatch;
-            });
-
-            renderCards(filteredResults);
-
-            if (query !== "") {
-                statusLabel.innerText = `Found ${filteredResults.length} matches for "${query}"`;
-            } else {
-                statusLabel.innerText = "Nearby surplus sorted by your location 📍";
-            }
-        }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
             if (!lat1 || !lon1 || !lat2 || !lon2) return null;
@@ -443,12 +156,14 @@
         async function fetchMarketplace() {
             const grid = document.getElementById('foodGrid');
             const statusLabel = document.getElementById('statusLabel');
-            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px;">Calculating distance to surplus...</p>';
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Calculating distance to surplus...</p>';
 
             navigator.geolocation.getCurrentPosition(async (position) => {
                 let userLat = position.coords.latitude;
                 let userLon = position.coords.longitude;
 
+                // --- SMART FIX: If browser location is far from Kochi, we force Kochi Center ---
+                // (This fixes the 182km bug when your ISP puts you in a different city)
                 if (userLat < 9.5 || userLat > 10.5) {
                     userLat = KOCHI_LAT;
                     userLon = KOCHI_LON;
@@ -457,17 +172,22 @@
                     statusLabel.innerText = "Nearby surplus sorted by your location 📍";
                 }
 
+                console.log(`SmartServe calculating from: ${userLat}, ${userLon}`);
+
                 try {
                     const response = await fetch(API_URL);
-                    allItems = await response.json();
+                    let items = await response.json();
                     
-                    allItems = allItems.map(item => {
-                        const dist = calculateDistance(userLat, userLon, Number(item.latitude), Number(item.longitude));
-                        return { ...item, distance: dist ? parseFloat(dist) : 9.5 };
+                    items = items.map(item => {
+                        const dbLat = Number(item.latitude);
+                        const dbLon = Number(item.longitude);
+                        const dist = calculateDistance(userLat, userLon, dbLat, dbLon);
+                        return { ...item, distance: dist ? parseFloat(dist) : 999 };
                     });
 
-                    allItems.sort((a, b) => a.distance - b.distance);
-                    renderCards(allItems);
+                    // Sort: Closest items first
+                    items.sort((a, b) => a.distance - b.distance);
+                    renderCards(items);
                 } catch (error) {
                     handleFetchError(error);
                 }
@@ -480,89 +200,48 @@
         async function loadWithFixedLocation(lat, lon) {
             try {
                 const response = await fetch(API_URL);
-                allItems = await response.json();
-                allItems = allItems.map(item => {
+                let items = await response.json();
+                items = items.map(item => {
                     const dist = calculateDistance(lat, lon, Number(item.latitude), Number(item.longitude));
-                    return { ...item, distance: dist ? parseFloat(dist) : 9.5 };
+                    return { ...item, distance: dist ? parseFloat(dist) : 999 };
                 });
-                allItems.sort((a, b) => a.distance - b.distance);
-                renderCards(allItems);
+                items.sort((a, b) => a.distance - b.distance);
+                renderCards(items);
             } catch (e) { handleFetchError(e); }
         }
 
         function renderCards(items) {
             const grid = document.getElementById('foodGrid');
-            if(items.length === 0) {
-                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #64748B; padding: 40px;">No items found matching your search.</p>`;
-                return;
-            }
-
-            grid.innerHTML = items.map(item => {
-                let rawImageUrl = item.imageUrl || '';
-                let finalFullUrl = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
-                
-                if (rawImageUrl) {
-                    if (rawImageUrl.startsWith('http')) finalFullUrl = rawImageUrl;
-                    else if (rawImageUrl.startsWith('/uploads/')) finalFullUrl = `http://localhost:8080${rawImageUrl}`;
-                    else finalFullUrl = `http://localhost:8080/uploads/${rawImageUrl}`;
-                }
-
-                const badgeHtml = item.donorApproved ? 
-                    `<span class="verified-badge-icon" title="Verified Donor">✓</span>` : '';
-
-                // Add the Charity Connect Button if the user is a charity
-                // Show Charity Connect if Charity, otherwise show Book Now for standard customers!
-                // Both Charity and Customers now open the SAME panel!
-                // This makes the buttons navigate to the details page
-                const actionButton = isCharity ? `
-                    <div class="charity-connect-overlay">
-                        <a href="item-details.html?id=${item.id}" class="connect-btn" style="text-decoration:none;">
-                            Connect for Donation
-                        </a>
+            grid.innerHTML = items.map(item => `
+                <a href="item-details.html?id=${item.id}" class="food-card">
+                    <div class="card-img-wrapper">
+                        <div class="category-badge">${item.distance} km away</div>
+                        <img src="${item.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'}" class="card-img">
                     </div>
-                ` : `
-                    <div class="charity-connect-overlay">
-                        <a href="item-details.html?id=${item.id}" class="connect-btn" style="background: var(--brand-primary); text-decoration:none;">
-                            Book Now
-                        </a>
+                    <div class="card-body">
+                        <h3 class="card-title">${item.title}</h3>
+                        <div class="location-text">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            ${item.addressText ? item.addressText.split(',')[0] : 'Kochi'}
+                        </div>
+                        <div class="price-container">
+                            <span class="discount-price">₹${item.discountedPrice}</span>
+                            <span class="original-price">₹${item.originalPrice}</span>
+                        </div>
+                        <div class="quantity-row">
+                            <span class="qty-text">${item.quantity} left</span>
+                            <span class="pickup-tag">${item.pickupTime || 'Today'}</span>
+                        </div>
                     </div>
-                `;
-
-                return `
-                <div class="food-card">
-                    <a href="item-details.html?id=${item.id}" style="text-decoration:none; color:inherit;">
-                        <div class="card-img-wrapper">
-                            <div class="category-badge">${item.distance} km away</div>
-                            <img src="${finalFullUrl}" class="card-img" alt="" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'">
-                        </div>
-                        <div class="card-body">
-                            <h3 class="card-title">${item.title} ${badgeHtml}</h3>
-                            <div class="location-text">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                ${item.addressText ? item.addressText.split(',')[0] : 'Kochi'}
-                            </div>
-                            <div class="price-container">
-                                <span class="discount-price">₹${item.discountedPrice}</span>
-                                <span class="original-price">₹${item.originalPrice}</span>
-                            </div>
-                            <div class="quantity-row">
-                                <span class="qty-text">${item.quantity} left</span>
-                                <span class="pickup-tag">${item.pickupTime || 'Today'}</span>
-                            </div>
-                        </div>
-                    </a>
-                    ${actionButton} </div>`;
-            }).join('');
+                </a>
+            `).join('');
         }
 
         function handleFetchError(error) {
-            document.getElementById('foodGrid').innerHTML = `<p style="color:red; grid-column:1/-1; text-align:center; padding: 40px;">Failed to connect to server. Please ensure Spring Boot is running.</p>`;
+            document.getElementById('foodGrid').innerHTML = `<p style="color:red; grid-column:1/-1; text-align:center;">Failed to connect to Spring Boot.</p>`;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initUser();
-            fetchMarketplace();
-        });
+        document.addEventListener('DOMContentLoaded', fetchMarketplace);
     </script>
 </body>
 </html>

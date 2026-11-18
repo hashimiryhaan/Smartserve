@@ -3,210 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartServe | Secure Handshake</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>SmartServe | Claim Verification</title>
     <style>
         :root {
-            --brand-primary: #5D54B1; /* Donor/Standard Theme */
-            --charity-blue: #2D63ED;  /* Charity Theme */
-            --bg-light: #F8FAFC;
+            --primary-green: #2ecc71;
+            --btn-blue: #5D54B1; /* Matching your Premium Brand Color */
+            --bg-gray: #f8f9fa;
             --text-dark: #1A1C1E;
-            --success: #22C55E;
+            --error-red: #e74c3c;
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-light);
-            margin: 0; display: flex; flex-direction: column; min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
         }
 
-        /* Dynamic Theme Support */
-        body.charity-mode { --brand-primary: var(--charity-blue); }
-
-        nav {
-            padding: 20px 6%;
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
             background: white;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #E2E8F0;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
 
-        .logo { font-size: 22px; font-weight: 800; text-decoration: none; color: var(--text-dark); }
-        .logo span { color: var(--brand-primary); }
-
-        .handshake-container {
-            flex: 1; display: flex; justify-content: center; align-items: center; padding: 40px 20px;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
         }
 
-        .handshake-card {
-            background: white; width: 100%; max-width: 450px;
-            padding: 40px; border-radius: 32px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.05);
-            text-align: center; border: 1px solid #F1F5F9;
+        h1 { color: var(--text-dark); margin: 0; font-size: 28px; font-weight: 800; }
+
+        .back-btn {
+            text-decoration: none;
+            color: var(--btn-blue);
+            font-weight: 700;
+            padding: 10px 20px;
+            border: 2px solid var(--btn-blue);
+            border-radius: 12px;
+            transition: 0.3s;
         }
 
-        .status-icon {
-            width: 80px; height: 80px; background: #EEF2FF;
-            color: var(--brand-primary); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 32px; margin: 0 auto 24px;
+        .back-btn:hover { background: var(--btn-blue); color: white; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; color: #71717a; border-bottom: 2px solid #f4f4f5; }
+        td { padding: 20px 15px; border-bottom: 1px solid #f4f4f5; font-weight: 500; }
+
+        .btn-verify {
+            background: var(--btn-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
         }
 
-        h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
-        p { color: #64748B; font-size: 15px; line-height: 1.6; margin-bottom: 32px; }
-
-        .item-summary {
-            background: #F8FAFC; padding: 20px; border-radius: 20px;
-            margin-bottom: 32px; text-align: left; border: 1px solid #E2E8F0;
+        /* OTP MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
         }
-        .item-summary-label { font-size: 11px; font-weight: 800; color: #94A3B8; text-transform: uppercase; }
-        .item-summary-value { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-top: 4px; }
 
-        /* OTP Input Styling */
-        .otp-group { display: flex; gap: 12px; justify-content: center; margin-bottom: 32px; }
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .otp-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
         .otp-input {
-            width: 60px; height: 70px; border: 2px solid #E2E8F0;
-            border-radius: 16px; text-align: center; font-size: 28px;
-            font-weight: 800; color: var(--brand-primary); transition: 0.3s;
-            outline: none; background: #fff;
+            width: 55px;
+            height: 55px;
+            border: 2px solid #e4e4e7;
+            border-radius: 16px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--btn-blue);
+            outline: none;
+            transition: 0.3s;
         }
-        .otp-input:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 4px rgba(45, 99, 237, 0.1); }
 
-        .verify-btn {
-            width: 100%; padding: 18px; background: var(--brand-primary);
-            color: white; border: none; border-radius: 18px;
-            font-size: 16px; font-weight: 800; cursor: pointer;
-            transition: 0.3s; box-shadow: 0 10px 20px rgba(45, 99, 237, 0.2);
-        }
-        .verify-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-        .verify-btn:disabled { background: #CBD5E1; box-shadow: none; cursor: not-allowed; }
+        .otp-input:focus { border-color: var(--btn-blue); }
 
-        .cancel-link {
-            display: inline-block; margin-top: 24px; color: #94A3B8;
-            font-weight: 700; font-size: 13px; text-decoration: none; transition: 0.2s;
+        /* Status colors for the inputs */
+        .otp-input.success { border-color: var(--primary-green); background: #f0fff4; }
+        .otp-input.error { border-color: var(--error-red); background: #fff5f5; }
+
+        .loader {
+            display: none;
+            margin-top: 10px;
+            color: var(--btn-blue);
+            font-weight: 600;
         }
-        .cancel-link:hover { color: var(--brand-primary); }
     </style>
 </head>
 <body>
 
-    <nav>
-        <a href="index.html" class="logo">smart<span>serve</span></a>
-        <div id="userPill" style="font-size: 13px; font-weight: 700; color: #64748B;">Handshake Portal</div>
-    </nav>
+<div class="container">
+    <div class="header">
+        <h1>Verify Claims</h1>
+        <a href="donor.html" class="back-btn">← Back to Dashboard</a>
+    </div>
 
-    <main class="handshake-container">
-        <div class="handshake-card">
-            <div class="status-icon" id="modeIcon">🤝</div>
-            <h1 id="handshakeTitle">Secure Handshake</h1>
-            <p id="handshakeSubtext">Enter the 4-digit code provided by the donor to complete the rescue.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>CLAIM ID</th>
+                <th>CUSTOMER</th>
+                <th>FOOD ITEM</th>
+                <th>ACTION</th>
+            </tr>
+        </thead>
+        <tbody id="claimsList">
+            </tbody>
+    </table>
+</div>
 
-            <div class="item-summary">
-                <div style="margin-bottom: 12px;">
-                    <span class="item-summary-label">Rescue Item</span>
-                    <div class="item-summary-value" id="itemName">Loading...</div>
-                </div>
-                <div>
-                    <span class="item-summary-label">Donor Location</span>
-                    <div class="item-summary-value" id="itemLoc">Fetching address...</div>
-                </div>
-            </div>
-
-            <div class="otp-group" id="otpContainer">
-                <input type="text" maxlength="1" class="otp-input" autofocus>
-                <input type="text" maxlength="1" class="otp-input">
-                <input type="text" maxlength="1" class="otp-input">
-                <input type="text" maxlength="1" class="otp-input">
-            </div>
-
-            <button class="verify-btn" id="verifyBtn" onclick="submitVerification()">COMPLETE PICKUP</button>
-            
-            <a href="history.html" class="cancel-link">Return to Activity History</a>
+<div id="otpModal" class="modal">
+    <div class="modal-content">
+        <h2 id="m-title" style="margin-bottom: 10px;">Enter Code</h2>
+        <p id="m-sub" style="color: #71717a;">Ask the customer for their 4-digit OTP</p>
+        
+        <div class="otp-group">
+            <input type="text" maxlength="1" class="otp-input" id="o1" oninput="moveFocus(this, 'o2')">
+            <input type="text" maxlength="1" class="otp-input" id="o2" oninput="moveFocus(this, 'o3')">
+            <input type="text" maxlength="1" class="otp-input" id="o3" oninput="moveFocus(this, 'o4')">
+            <input type="text" maxlength="1" class="otp-input" id="o4" oninput="autoSubmit(this)">
         </div>
-    </main>
 
-    <script>
-        const API_BASE = "http://localhost:8080/api/claims";
-        const FOOD_API = "http://localhost:8080/api/food";
-        const urlParams = new URLSearchParams(window.location.search);
-        const claimId = urlParams.get('id'); // Get the claim ID from URL
+        <div id="statusMsg" class="loader">Verifying...</div>
+        
+        <button onclick="closeModal()" style="margin-top: 20px; background: none; border: none; color: #71717a; cursor: pointer; font-weight: 600;">Cancel</button>
+    </div>
+</div>
 
-        // 1. Initialize Page Logic
-        async function initHandshake() {
-            if (!claimId) {
-                alert("No active claim found.");
-                window.location.href = "marketplace.html";
-                return;
-            }
+<script>
+    const API_URL = "https://smartserve-api-lolg.onrender.com/api/food";
+    let activeId = null;
 
-            try {
-                // Fetch claim details to see if it's a Charity or regular user
-                const response = await fetch(`${API_BASE}/${claimId}`);
-                const claim = await response.json();
-
-                // Check if it's a Charity connection
-                if (claim.claimerType === 'CHARITY' || claim.food?.listingType === 'DONATION') {
-                    document.body.classList.add('charity-mode');
-                    document.getElementById('handshakeTitle').innerText = "Charity Handshake";
-                    document.getElementById('modeIcon').innerText = "🛡️";
-                }
-
-                document.getElementById('itemName').innerText = claim.food?.title || "Surplus Food";
-                document.getElementById('itemLoc').innerText = claim.food?.addressText || "Kochi, Kerala";
-
-            } catch (err) {
-                console.error("Handshake Init Failed:", err);
-                document.getElementById('itemName').innerText = "Connection Error";
-            }
+    // Load claims from backend
+    async function loadClaims() {
+        try {
+            const res = await fetch(`${API_URL}/pending-claims`);
+            const data = await res.json();
+            const list = document.getElementById('claimsList');
+            
+            list.innerHTML = data.map(c => `
+                <tr>
+                    <td>#${c.id}</td>
+                    <td>${c.claimantName || 'Arjun K.'}</td>
+                    <td>${c.title}</td>
+                    <td><button class="btn-verify" onclick="openModal(${c.id}, '${c.claimantName || 'Arjun K.'}')">Verify OTP</button></td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            // Placeholder for testing
+            document.getElementById('claimsList').innerHTML = `
+                <tr><td>#1024</td><td>Arjun K.</td><td>Veg Biryani</td><td><button class="btn-verify" onclick="openModal(1024, 'Arjun K.')">Verify OTP</button></td></tr>
+            `;
         }
+    }
 
-        // 2. Manage OTP Input Behavior (Auto-tabbing)
-        const inputs = document.querySelectorAll('.otp-input');
-        inputs.forEach((input, index) => {
-            input.addEventListener('keyup', (e) => {
-                if (e.target.value.length === 1 && index < inputs.length - 1) {
-                    inputs[index + 1].focus();
-                }
-                if (e.key === "Backspace" && index > 0 && e.target.value === "") {
-                    inputs[index - 1].focus();
-                }
-            });
-        });
+    function openModal(id, name) {
+        activeId = id;
+        document.getElementById('m-title').innerText = "Verify Arjun K.";
+        document.getElementById('otpModal').style.display = 'block';
+        document.getElementById('o1').focus();
+    }
 
-        // 3. Submit for Verification
-        async function submitVerification() {
-            const otp = Array.from(inputs).map(i => i.value).join('');
-            if (otp.length < 4) {
-                alert("Please enter the full 4-digit code.");
-                return;
-            }
+    // Auto-move to next box
+    function moveFocus(curr, nextId) {
+        if (curr.value.length === 1) {
+            document.getElementById(nextId).focus();
+        }
+    }
 
-            const btn = document.getElementById('verifyBtn');
-            btn.disabled = true;
-            btn.innerText = "VERIFYING...";
+    // This handles the 4th box and submits automatically
+    async function autoSubmit(curr) {
+        if (curr.value.length === 1) {
+            const otp = document.getElementById('o1').value + 
+                        document.getElementById('o2').value + 
+                        document.getElementById('o3').value + 
+                        document.getElementById('o4').value;
+            
+            const msg = document.getElementById('statusMsg');
+            msg.style.display = 'block';
+            msg.innerText = "Verifying...";
 
             try {
-                // Sending OTP to Spring Boot backend
-                const response = await fetch(`${API_BASE}/${claimId}/verify?otp=${otp}`, {
-                    method: 'POST'
+                const res = await fetch(`${API_URL}/verify-otp/${activeId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ otp: otp })
                 });
 
-                if (response.ok) {
-                    alert("✅ Handshake Verified! Impact points added to your profile.");
-                    window.location.href = "history.html";
+                if (res.ok) {
+                    msg.innerText = "✅ SUCCESS! Hand over food.";
+                    msg.style.color = "var(--primary-green)";
+                    document.querySelectorAll('.otp-input').forEach(i => i.classList.add('success'));
+                    
+                    setTimeout(() => {
+                        closeModal();
+                        loadClaims();
+                    }, 2000);
                 } else {
-                    alert("❌ Invalid Code. Please confirm the OTP with the donor.");
-                    btn.disabled = false;
-                    btn.innerText = "COMPLETE PICKUP";
-                    inputs.forEach(i => i.value = "");
-                    inputs[0].focus();
+                    msg.innerText = "❌ Invalid Code. Try again.";
+                    msg.style.color = "var(--error-red)";
+                    document.querySelectorAll('.otp-input').forEach(i => {
+                        i.value = '';
+                        i.classList.add('error');
+                    });
+                    document.getElementById('o1').focus();
                 }
-            } catch (error) {
-                alert("Server error. Ensure your Spring Boot app is running.");
-                btn.disabled = false;
+            } catch (err) {
+                msg.innerText = "Server Error. Try again later.";
             }
         }
+    }
 
-        window.onload = initHandshake;
-    </script>
+    function closeModal() {
+        document.getElementById('otpModal').style.display = 'none';
+        document.querySelectorAll('.otp-input').forEach(i => {
+            i.value = '';
+            i.classList.remove('success', 'error');
+        });
+        document.getElementById('statusMsg').style.display = 'none';
+    }
+
+    window.onload = loadClaims;
+</script>
+
 </body>
 </html>

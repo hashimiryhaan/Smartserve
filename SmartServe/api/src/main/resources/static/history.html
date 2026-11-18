@@ -2,284 +2,117 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartServe | History & Records</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>SmartServe | My History</title>
     <style>
-        :root {
-            --brand-primary: #5D54B1;
-            --charity-blue: #2D63ED;
-            --bg-gradient: linear-gradient(135deg, #f8f9ff 0%, #fcfaff 100%);
-            --text-dark: #1A1C1E;
-            --text-muted: #71717A;
-            --radius-xl: 20px;
-        }
+        .history-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: var(--bg-gradient);
-            color: var(--text-dark);
-            min-height: 100vh;
-        }
+.history-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    background: #f9f9f9;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+}
 
-        /* --- Navigation --- */
-        nav {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 1rem 6%; background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px); border-bottom: 1px solid #E4E4E7;
-            position: sticky; top: 0; z-index: 1000;
-        }
-        .back-home { text-decoration: none; color: var(--text-dark); font-weight: 700; font-size: 13px; }
-        .logo { font-size: 22px; font-weight: 800; letter-spacing: -1px; }
-        .logo span { color: var(--brand-primary); }
+.otp-badge {
+    display: inline-block;
+    background: #27ae60;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-family: monospace;
+    font-size: 1.2rem;
+}
 
-        /* --- Header & Tabs --- */
-        .header-section { padding: 40px 6% 20px; text-align: center; }
-        .header-section h1 { font-size: 32px; font-weight: 800; margin-bottom: 20px; }
-        
-        .tab-container {
-            display: inline-flex; background: #fff; padding: 5px;
-            border-radius: 12px; border: 1px solid #E4E4E7; margin-bottom: 30px;
-        }
-        .tab-btn {
-            padding: 10px 24px; border: none; background: transparent;
-            font-weight: 700; font-size: 14px; color: var(--text-muted);
-            border-radius: 8px; cursor: pointer; transition: 0.3s;
-        }
-        .tab-btn.active { background: var(--brand-primary); color: white; }
+.status-tag {
+    float: right;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
 
-        /* --- Table Styles --- */
-        .table-wrapper { padding: 0 6% 60px; display: none; }
-        .table-wrapper.active { display: block; }
-        .data-table-container { 
-            background: white; border-radius: var(--radius-xl); overflow: hidden; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #E4E4E7; 
-        }
-        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .data-table th { padding: 15px 20px; background: #f8f9ff; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-        .data-table td { padding: 15px 20px; border-bottom: 1px solid #f4f4f5; font-weight: 600; font-size: 14px; }
-        
-        /* Badges & Buttons */
-        .badge { padding: 4px 10px; border-radius: 50px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-        .badge-success { background: #DCFCE7; color: #166534; }
-        .badge-pending { background: #FEF3C7; color: #92400E; }
-        .badge-cancelled { background: #FEE2E2; color: #991B1B; } /* New Cancelled Badge */
-        .otp-box { background: #F4F4F5; padding: 4px 12px; border-radius: 6px; font-family: monospace; font-size: 15px; font-weight: 800; letter-spacing: 2px; }
-        
-        /* Cancel Button Styling */
-        .cancel-btn {
-            background: white; border: 1px solid #EF4444; color: #EF4444; 
-            padding: 8px 12px; border-radius: 8px; cursor: pointer; 
-            font-weight: 700; font-size: 12px; transition: 0.2s;
-        }
-        .cancel-btn:hover { background: #FEF2F2; transform: scale(1.05); }
+.status-pending { color: #f39c12; }
+.status-claimed { color: #27ae60; }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h2>History & Tracking</h2>
+        
+        <section id="customer-history">
+            <h3>My Claimed Food (Order History)</h3>
+            <div id="order-list" class="history-grid">
+                </div>
+        </section>
 
-    <nav>
-        <a href="javascript:history.back()" class="back-home">← BACK</a>
-        <div class="logo">SMART<span>SERVE</span></div>
-        <div style="width: 60px;"></div> 
-    </nav>
+        <hr>
 
-    <div class="header-section">
-        <h1>Activity History</h1>
-        <div class="tab-container">
-            <button class="tab-btn active" onclick="switchTab('donations')" id="tab-donations">My Donations</button>
-            <button class="tab-btn" onclick="switchTab('pickups')" id="tab-pickups">My Pickups</button>
-        </div>
-    </div>
-
-    <div class="table-wrapper active" id="view-donations">
-        <div class="data-table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Item ID</th>
-                        <th>Food Item</th>
-                        <th>Category</th>
-                        <th>Listing Mode</th>
-                        <th>Status</th>
-                        <th>OTP Code</th>
-                        <th>Date Published</th>
-                    </tr>
-                </thead>
-                <tbody id="donorHistoryList">
-                    <tr><td colspan="7" style="text-align:center; padding:30px;">Loading donations...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="table-wrapper" id="view-pickups">
-        <div class="data-table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Claim ID</th>
-                        <th>Food Item</th>
-                        <th>Donor Name</th>
-                        <th>Status</th>
-                        <th>Verified OTP</th>
-                        <th>Claim Date</th>
-                        <th>Action</th> </tr>
-                </thead>
-                <tbody id="claimHistoryList">
-                    <tr><td colspan="7" style="text-align:center; padding:30px;">Loading pickups...</td></tr>
-                </tbody>
-            </table>
-        </div>
+        <section id="donor-history">
+            <h3>My Food Listings (Donor History)</h3>
+            <div id="listing-list" class="history-grid">
+                </div>
+        </section>
     </div>
 
     <script>
-        const FOOD_API = "http://localhost:8080/api/food";
-        const CLAIM_API = "http://localhost:8080/api/claims";
-        let savedUserId = null;
+        const API_BASE = "https://smartserve-api-lolg.onrender.com/api";
+const CURRENT_USER_ID = 1; // Replace with your actual logged-in User ID
 
-        function switchTab(tabName) {
-            document.getElementById('tab-donations').classList.remove('active');
-            document.getElementById('tab-pickups').classList.remove('active');
-            document.getElementById(`tab-${tabName}`).classList.add('active');
+document.addEventListener("DOMContentLoaded", () => {
+    loadCustomerOrders();
+    loadDonorListings();
+});
 
-            document.getElementById('view-donations').classList.remove('active');
-            document.getElementById('view-pickups').classList.remove('active');
-            document.getElementById(`view-${tabName}`).classList.add('active');
-        }
+// 1. Fetch Customer Order History (Claims + OTPs)
+async function loadCustomerOrders() {
+    try {
+        const response = await fetch(`${API_BASE}/claims/history/customer/${CURRENT_USER_ID}`);
+        const claims = await response.json();
+        const container = document.getElementById('order-list');
 
-        async function loadHistory() {
-            savedUserId = localStorage.getItem('ss_id');
-            if (!savedUserId) {
-                alert("Please log in to view your history.");
-                window.location.href = "index.html";
-                return;
-            }
+        container.innerHTML = claims.map(claim => `
+            <div class="history-card">
+                <span class="status-tag status-${claim.status.toLowerCase()}">${claim.status}</span>
+                <h4>${claim.food.title}</h4>
+                <p>📍 ${claim.food.addressText}</p>
+                <div class="otp-container">
+                    <small>Your Pick-up OTP:</small><br>
+                    <span class="otp-badge">${claim.otpCode}</span>
+                </div>
+                <p><small>Claimed on: ${new Date(claim.claimDate).toLocaleDateString()}</small></p>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error("Error loading orders:", err);
+    }
+}
 
-            try {
-                const claimRes = await fetch(CLAIM_API);
-                const allClaims = await claimRes.json();
-                
-                const foodRes = await fetch(FOOD_API);
-                const allFood = await foodRes.json();
-                
-                const myDonations = allFood.filter(f => f.donor && f.donor.id == savedUserId);
-                const myPickups = allClaims.filter(c => c.claimant && c.claimant.id == savedUserId);
-                
-                renderDonations(myDonations, allClaims);
-                renderPickups(myPickups);
+// 2. Fetch Donor Food Listing History
+async function loadDonorListings() {
+    try {
+        const response = await fetch(`${API_BASE}/food/donor/${CURRENT_USER_ID}`);
+        const listings = await response.json();
+        const container = document.getElementById('listing-list');
 
-            } catch (error) {
-                console.error("Failed to load history:", error);
-            }
-        }
-
-        function renderDonations(items, allClaims) {
-            const list = document.getElementById('donorHistoryList');
-            if (items.length === 0) {
-                list.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#999;">You haven't listed any food yet.</td></tr>`;
-                return;
-            }
-
-            list.innerHTML = items.map(item => {
-                const statusBadge = item.status === 'CLAIMED' ? 'badge-success' : 'badge-pending';
-                const date = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
-                
-                const relatedClaim = allClaims.find(c => c.food && c.food.id === item.id && c.status !== 'CANCELLED');
-                const otpDisplay = relatedClaim && relatedClaim.otp ? `<span class="otp-box">${relatedClaim.otp}</span>` : '<span style="color:#999;">N/A</span>';
-                
-                return `
-                <tr>
-                    <td style="color:var(--brand-primary); font-weight: 800;">#F-${item.id}</td>
-                    <td style="font-weight: 700;">${item.title}</td>
-                    <td>${item.category ? item.category.name : 'N/A'}</td>
-                    <td>${item.listingType === 'DONATION' ? 'Charity Rescue' : 'Marketplace'}</td>
-                    <td><span class="badge ${statusBadge}">${item.status}</span></td>
-                    <td>${otpDisplay}</td> 
-                    <td style="color:var(--text-muted); font-size:13px;">${date}</td>
-                </tr>
-                `;
-            }).join('');
-        }
-
-        function renderPickups(claims) {
-            const list = document.getElementById('claimHistoryList');
-            if (claims.length === 0) {
-                list.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#999;">You haven't claimed any items yet.</td></tr>`;
-                return;
-            }
-
-            list.innerHTML = claims.map(c => {
-                const isVerified = c.status === 'VERIFIED';
-                const isCancelled = c.status === 'CANCELLED';
-                
-                let statusBadge = 'badge-pending';
-                if (isVerified) statusBadge = 'badge-success';
-                if (isCancelled) statusBadge = 'badge-cancelled';
-
-                const donorName = (c.food && c.food.donor) ? c.food.donor.name : 'Unknown';
-                const foodTitle = c.food ? c.food.title : 'Deleted Item';
-                
-                // Hide OTP if cancelled
-                const otpDisplay = isCancelled ? '-' : (c.otp ? c.otp : (isVerified ? '****' : 'Pending'));
-
-                // Dynamic Action Column Logic
-                let actionHtml = '';
-                if (c.status === 'PENDING') {
-                    actionHtml = `<button onclick="cancelOrder(${c.id})" class="cancel-btn">❌ Cancel</button>`;
-                } else if (isCancelled) {
-                    actionHtml = `<span style="color: #EF4444; font-weight: bold; font-size: 13px;">Cancelled</span>`;
-                } else {
-                    actionHtml = `<span style="color: #10B981; font-weight: bold; font-size: 13px;">✔ Picked Up</span>`;
-                }
-
-                return `
-                <tr>
-                    <td style="color:var(--brand-primary);">#C-${c.id}</td>
-                    <td>${foodTitle}</td>
-                    <td>${donorName}</td>
-                    <td><span class="badge ${statusBadge}">${c.status}</span></td>
-                    <td><span class="${c.otp && !isCancelled ? 'otp-box' : ''}" style="color:${isVerified ? '#166534' : '#999'}">${otpDisplay}</span></td>
-                    <td style="color:var(--text-muted); font-size:13px;">${c.claimedat || 'N/A'}</td>
-                    <td>${actionHtml}</td>
-                </tr>
-                `;
-            }).join('');
-        }
-
-        async function cancelOrder(claimId) {
-            const confirmCancel = confirm("Are you sure you want to cancel this food rescue? The item will be returned to the marketplace.");
-            if (!confirmCancel) return;
-
-            try {
-                const response = await fetch(`http://localhost:8080/api/claims/cancel/${claimId}`, {
-                    method: 'POST'
-                });
-
-                if (response.ok) {
-                    alert("✅ Order cancelled successfully. An email confirmation has been sent.");
-                    window.location.reload(); 
-                } else {
-                    // --- BULLETPROOF ERROR HANDLING ---
-                    let errorMessage = "Unknown server error";
-                    try {
-                        const errData = await response.json();
-                        // Grab our custom message, OR the default Spring Boot 'error' string
-                        errorMessage = errData.message || errData.error || JSON.stringify(errData);
-                    } catch (parseError) {
-                        // If it's completely broken and not even JSON, grab the raw text
-                        errorMessage = await response.text(); 
-                    }
-                    
-                    alert("Failed to cancel: " + errorMessage);
-                }
-            } catch (error) {
-                console.error("Network Error:", error);
-                alert("Could not connect to the server. Please check if Spring Boot is running.");
-            }
-        }
-        window.onload = loadHistory;
+        container.innerHTML = listings.map(item => `
+            <div class="history-card">
+                <span class="status-tag status-${item.status.toLowerCase()}">${item.status}</span>
+                <h4>${item.title}</h4>
+                <p>Quantity: ${item.quantity}</p>
+                <p>Listed: ${new Date(item.createdAt).toLocaleDateString()}</p>
+                ${item.status === 'AVAILABLE' ? '<button class="btn-manage">Manage</button>' : ''}
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error("Error loading listings:", err);
+    }
+}
     </script>
 </body>
 </html>
