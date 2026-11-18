@@ -1,14 +1,13 @@
 package com.smartserve.api.claims;
 
 import com.smartserve.api.food.FoodListing;
-import com.smartserve.api.food.FoodListingRepository;
+import com.smartserve.api.food.FoodListingRepository; // Corrected naming
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Random;
-import java.util.List;
 
 @Service
 public class ClaimService {
@@ -17,114 +16,37 @@ public class ClaimService {
     private ClaimRepository claimRepository;
 
     @Autowired
-    private FoodListingRepository foodListingRepository;
+    private FoodListingRepository foodListingRepository; // Match your repository name
 
-    @Autowired
-    private EmailService emailService;
+    @Transactional
+    public Claim createClaim(Claim claim) {
+        // 1. Generate a random 4-digit OTP
+        String randomOtp = String.valueOf(1000 + new Random().nextInt(9000));
+        claim.setOtp(randomOtp);
+        claim.setStatus(Claim.ClaimStatus.PENDING);
+        claim.setClaimedAt(LocalDateTime.now()); // Ensure naming matches entity (camelCase)
+        
+        // 2. Mark the food as CLAIMED so others can't see it
+        FoodListing food = foodListingRepository.findById(claim.getFood().getId())
+                .orElseThrow(() -> new RuntimeException("Food listing not found"));
+        
+        food.setStatus(FoodListing.ListingStatus.CLAIMED); // Match the Enum name in FoodListing
+        foodListingRepository.save(food);
 
-    /**
-     * Creates a new claim, generates an OTP, and hides the food from the marketplace.
-     */
-    
-@Transactional
-public Claim createClaim(Claim claim) {
-    // 1. Fetch the food item
-    FoodListing food = foodListingRepository.findById(claim.getFood().getId())
-            .orElseThrow(() -> new RuntimeException("Food listing not found"));
-    claim.setFood(food);        
-    // 2. Validate the requested quantity
-    if (claim.getClaimedQuantity() == null || claim.getClaimedQuantity() <= 0) {
-        throw new RuntimeException("You must claim at least 1 item.");
-    }
-    if (food.getQuantity() < claim.getClaimedQuantity()) {
-        throw new RuntimeException("Not enough food available! Only " + food.getQuantity() + " left.");
+        return claimRepository.save(claim);
     }
 
-    // 3. Decrement the food quantity
-    food.setQuantity(food.getQuantity() - claim.getClaimedQuantity());
-
-    // 4. If quantity hits 0, hide it from the marketplace
-    if (food.getQuantity() == 0) {
-        food.setStatus(FoodListing.ListingStatus.CLAIMED); 
-    }
-    foodListingRepository.save(food); // Save the updated inventory
-
-    // 5. Generate OTP and save the claim
-    String randomOtp = String.valueOf(1000 + new Random().nextInt(9000));
-    claim.setOtp(randomOtp);
-    claim.setStatus(Claim.ClaimStatus.PENDING);
-    claim.setClaimedAt(LocalDateTime.now());
-
-    // 6. Save the claim and store the result in a variable
-    Claim savedClaim = claimRepository.save(claim);
-
-    // 7. NEW: Trigger the Email Notification
-    try {
-        // We check if the claimant and their email exist before sending
-        if (savedClaim.getClaimant() != null && savedClaim.getClaimant().getEmail() != null) {
-            emailService.sendOtpEmail(
-                savedClaim.getClaimant().getEmail(), 
-                savedClaim.getFood().getTitle(), 
-                savedClaim.getOtp(), 
-                savedClaim.getClaimedQuantity()
-            );
-        }
-    } catch (Exception e) {
-        // If email fails, we log it but don't stop the user from booking
-        System.err.println("Email notification failed: " + e.getMessage());
-    }
-
-    return savedClaim;
-}
-
-    /**
-     * Verifies the OTP provided by the customer at the time of pickup.
-     */
     @Transactional
     public Claim verifyClaim(Integer claimId, String inputOtp) {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new RuntimeException("Claim not found"));
 
-        if (!claim.getStatus().equals(Claim.ClaimStatus.PENDING)) {
-            throw new RuntimeException("This claim is already " + claim.getStatus());
-        }
-
         if (claim.getOtp().equals(inputOtp)) {
             claim.setStatus(Claim.ClaimStatus.VERIFIED);
-            claim.setVerifiedAt(LocalDateTime.now());
+            claim.setVerifiedAt(LocalDateTime.now()); // Corrected to camelCase
             return claimRepository.save(claim);
         } else {
             throw new RuntimeException("Invalid OTP. Verification failed.");
         }
     }
-
-    /**
-     * Cancels a pending claim and makes the food available in the marketplace again.
-     */
-    @Transactional
-    public void cancelClaim(Integer claimId) {
-        Claim claim = claimRepository.findById(claimId)
-                .orElseThrow(() -> new RuntimeException("Claim not found"));
-
-        if (!claim.getStatus().equals(Claim.ClaimStatus.PENDING)) {
-            throw new RuntimeException("Only pending claims can be cancelled.");
-        }
-
-        // 1. Update Claim status
-        claim.setStatus(Claim.ClaimStatus.CANCELLED);
-        claimRepository.save(claim);
-
-        // 2. Make the FoodListing available again
-        FoodListing food = foodListingRepository.findById(claim.getFood().getId())
-                .orElseThrow(() -> new RuntimeException("Associated food listing not found"));
-        
-        // Use the status name that makes it show back up on the home page (usually AVAILABLE)
-        food.setStatus(FoodListing.ListingStatus.AVAILABLE); 
-        foodListingRepository.save(food);
-    }
-     // ADD THIS METHOD
-    public List<Claim> getAllClaims() {
-        return claimRepository.findAll();
-    }
-    
 }

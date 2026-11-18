@@ -18,7 +18,6 @@ public interface FoodListingRepository extends JpaRepository<FoodListing, Intege
 
     // 4. ADDED: This fixes the 'countByStatus' error in your Service
     // This will provide the [X] Meals Saved stat for your Landing Page
-    // ADD THIS METHOD: This allows the Service to filter specifically for available donations
-    List<FoodListing> findByStatusAndListingType(FoodListing.ListingStatus status, FoodListing.ListingType listingType);
     long countByStatus(FoodListing.ListingStatus status);
+    List<FoodListing> findByDonor_Id(Integer donorId);
 }

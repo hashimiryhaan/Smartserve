@@ -6,7 +6,6 @@ import com.smartserve.api.users.User;
 import com.smartserve.api.users.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/claims")
-@CrossOrigin(origins = "*") // Allows your frontend on port 5500 to talk to port 8080
+@CrossOrigin(origins = "*") 
 public class ClaimController {
 
     @Autowired
@@ -29,43 +28,34 @@ public class ClaimController {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private EmailService emailService;
-
     /**
-     * 1. Place a Claim (UPDATED FOR JSON PAYLOAD)
-     * We now use @RequestBody so Spring Boot reads the JSON payload sent from item-details.html
+     * 1. Place a Claim
+     * Triggered by the "CLAIM THIS FOOD" button.
      */
     @PostMapping("/add")
-    public ResponseEntity<?> placeClaim(@RequestBody Claim claimRequest) {
-        try {
-            // We need to fetch the User to grab their Role, Name, and EMAIL!
-            if (claimRequest.getClaimant() != null && claimRequest.getClaimant().getId() != null) {
-                User claimant = userRepository.findById(claimRequest.getClaimant().getId())
-                        .orElseThrow(() -> new RuntimeException("User not found"));
-                
-                // --- THE CRITICAL FIX ---
-                // Put the fully loaded user (with the email) back into the claim!
-                claimRequest.setClaimant(claimant); 
-                // ------------------------
+    public ResponseEntity<Claim> placeClaim(@RequestParam Integer foodId, @RequestParam Integer claimantId) {
+        // 1. Fetch entities from DB
+        FoodListing food = foodListingRepository.findById(foodId)
+                .orElseThrow(() -> new RuntimeException("Food listing not found"));
+        
+        User claimant = userRepository.findById(claimantId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-                claimRequest.setClaimerType(claimant.getRole() != null ? claimant.getRole().name() : "USER");
-                claimRequest.setClaimerName(claimant.getName());
-            }
+        // 2. Prepare the claim request
+        Claim claimRequest = new Claim();
+        
+        // Use setFood() because your variable name is 'food'
+        claimRequest.setFood(food); 
+        claimRequest.setClaimant(claimant);
 
-            // claimRequest now automatically contains the 'claimedQuantity' AND the full User!
-            Claim savedClaim = claimService.createClaim(claimRequest);
-            
-            return ResponseEntity.ok(savedClaim);
-            
-        } catch (Exception e) {
-            // Return a clean error message to the frontend if something fails (like not enough food)
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        // 3. Hand over to service for OTP generation and status management
+        Claim savedClaim = claimService.createClaim(claimRequest);
+        return ResponseEntity.ok(savedClaim);
     }
 
     /**
      * 2. Verify OTP
+     * Used by the Donor Dashboard.
      */
     @PostMapping("/{id}/verify")
     public ResponseEntity<?> verify(@PathVariable Integer id, @RequestParam String otp) {
@@ -78,16 +68,7 @@ public class ClaimController {
     }
 
     /**
-     * 3. Get User Claim History
-     */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Claim>> getUserClaims(@PathVariable Integer userId) {
-        List<Claim> userHistory = claimRepository.findByClaimantIdOrderByIdDesc(userId);
-        return ResponseEntity.ok(userHistory);
-    }
-
-    /**
-     * 4. Get Pending Pickups
+     * 3. Get Pending Pickups
      */
     @GetMapping("/pending")
     public List<Claim> getPendingClaims() {
@@ -95,68 +76,25 @@ public class ClaimController {
                 .filter(c -> c.getStatus() == Claim.ClaimStatus.PENDING)
                 .toList();
     }
+    /**
+     * 4. Get Order History for a specific Customer
+     * This shows all claims (Pending, Claimed, Expired) and their OTPs.
+     */
+    @GetMapping("/history/customer/{claimantId}")
+    public ResponseEntity<List<Claim>> getCustomerOrderHistory(@PathVariable Integer claimantId) {
+        // You'll need to add findByClaimantId in your ClaimRepository
+        List<Claim> history = claimRepository.findByClaimant_Id(claimantId);
+        return ResponseEntity.ok(history);
+    }
 
     /**
-     * 5. Cancel a Claim
-     * Fixed to return the exact quantity requested, rather than just 1.
+     * 5. Get Food Listing History for a specific Donor
+     * This shows all food items a donor has ever posted.
      */
-    @PostMapping("/cancel/{id}")
-    @Transactional
-    public ResponseEntity<?> cancelClaim(@PathVariable Integer id) {
-        try {
-            Claim claim = claimRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Claim not found"));
-
-            if (claim.getStatus() == Claim.ClaimStatus.PENDING) {
-                // 1. Update Status
-                claim.setStatus(Claim.ClaimStatus.CANCELLED);
-                claimRepository.save(claim);
-
-                // 2. Restore Food Quantity safely
-                FoodListing food = claim.getFood();
-                int qtyToRestore = claim.getClaimedQuantity() != null ? claim.getClaimedQuantity() : 1;
-                
-                if (food != null) {
-                    // Safe math: default to 0 if quantity is somehow null
-                    int currentQty = food.getQuantity() != null ? food.getQuantity() : 0;
-                    food.setQuantity(currentQty + qtyToRestore);
-                    
-                    if (food.getStatus() == FoodListing.ListingStatus.CLAIMED) {
-                        food.setStatus(FoodListing.ListingStatus.AVAILABLE);
-                    }
-                    foodListingRepository.save(food);
-                }
-
-                // 3. Trigger Email safely
-                try {
-                    if (claim.getClaimant() != null && claim.getClaimant().getEmail() != null) {
-                        emailService.sendCancellationEmail(
-                            claim.getClaimant().getEmail(), 
-                            food != null && food.getTitle() != null ? food.getTitle() : "Unknown Item", 
-                            qtyToRestore
-                        );
-                    }
-                } catch (Exception emailEx) {
-                    System.err.println("Cancellation email failed: " + emailEx.getMessage());
-                }
-
-                return ResponseEntity.ok(Map.of("message", "Claim cancelled successfully."));
-            } else {
-                return ResponseEntity.badRequest().body(Map.of("message", "Cannot cancel a claim that is already verified or cancelled."));
-            }
-        } catch (Exception e) {
-            // This catches ANY crash and sends the exact error message to the frontend!
-            e.printStackTrace(); 
-            String errorMsg = e.getMessage() != null ? e.getMessage() : "Internal Server Error. Check Spring Boot console.";
-            return ResponseEntity.status(500).body(Map.of("message", errorMsg));
-        }
-    }
-    @GetMapping
-    public ResponseEntity<List<Claim>> getAllClaims() {
-        try {
-            return ResponseEntity.ok(claimService.getAllClaims());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+    @GetMapping("/history/donor/{donorId}")
+    public ResponseEntity<List<FoodListing>> getDonorListingHistory(@PathVariable Integer donorId) {
+        // You'll need to add findByDonorId in your FoodListingRepository
+        List<FoodListing> history = foodListingRepository.findByDonor_Id(donorId);
+        return ResponseEntity.ok(history);
     }
 }

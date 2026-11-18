@@ -23,9 +23,6 @@ public class FoodListingController {
 
     private final String UPLOAD_DIR = "uploads/";
 
-    @Autowired
-    private FoodListingService foodListingService;
-
     // 1. GLOBAL VIEW: All items for general fetch
     @GetMapping
     public List<FoodListing> getAllFood() {
@@ -35,30 +32,18 @@ public class FoodListingController {
     // 2. ADD: Logic for New Listings
     @PostMapping(value = "/add", consumes = {"multipart/form-data"})
     public ResponseEntity<FoodListing> addFood(
-            @RequestPart(value = "file", required = false) MultipartFile file, // FIXED: Made file optional
-            @RequestPart("data") FoodListing foodListing) {
+            @RequestPart("file") MultipartFile file, 
+            @RequestPart("data") FoodListing foodListing) throws IOException {
         
-        try {
-            // FIXED: Only try to save the image if a file was actually uploaded
-            if (file != null && !file.isEmpty()) {
-                String fileName = saveImageFile(file);
-                foodListing.setImageUrl("/uploads/" + fileName);
-            } else {
-                // Set a default image URL if no photo is uploaded
-                foodListing.setImageUrl("https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500");
-            }
-            
-            foodListing.setCreatedAt(LocalDateTime.now()); 
-            
-            if (foodListing.getStatus() == null) {
-                foodListing.setStatus(FoodListing.ListingStatus.AVAILABLE);
-            }
-            
-            return ResponseEntity.ok(foodListingService.saveFood(foodListing));
-            
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError().build(); // Graceful error handling
+        String fileName = saveImageFile(file);
+        foodListing.setImageUrl("/uploads/" + fileName);
+        foodListing.setCreatedAt(LocalDateTime.now()); 
+        
+        if (foodListing.getStatus() == null) {
+            foodListing.setStatus(FoodListing.ListingStatus.AVAILABLE);
         }
+        
+        return ResponseEntity.ok(foodService.saveFood(foodListing));
     }
 
     // 3. UPDATE: Now handles Multipart so you can update images too!
@@ -132,9 +117,5 @@ public class FoodListingController {
     @GetMapping("/available")
     public List<FoodListing> getAllAvailable() {
         return foodService.getAvailableFood();
-    }
-    @GetMapping("/donations")
-    public List<FoodListing> getDonationsForCharity() {
-        return foodListingService.getAvailableDonations();
     }
 }

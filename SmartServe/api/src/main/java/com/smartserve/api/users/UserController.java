@@ -1,14 +1,8 @@
 package com.smartserve.api.users;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -21,105 +15,81 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    // 1. Get all users
+    // 1. GET ALL USERS
     @GetMapping("/all")
     public List<User> getUsers() {
         return userService.getAllUsers();
     }
 
-    /**
-     * 2. SIGNUP
-     * Handles 'multipart/form-data' for user data and business license.
-     */
-    @PostMapping(value = "/signup", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> signup(
-            @RequestPart("user") String userJson, 
-            @RequestPart(value = "license", required = false) MultipartFile file) {
+    // 2. SIGNUP
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@RequestBody Map<String, String> signupData) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            User newUser = mapper.readValue(userJson, User.class);
+            User newUser = new User();
+            newUser.setEmail(signupData.get("email"));
+            newUser.setPassword(signupData.get("password"));
+            newUser.setPhone(signupData.get("phone")); // Added to capture ph no from your screenshot
+            
+            // Default setup for new signups like 'Ryhan'
+            newUser.setName("New User"); 
+            newUser.setRole(User.Role.CLAIMANT); 
+            newUser.setBusinessType(User.BusinessType.INDIVIDUAL);
 
-            if (newUser.getBusinessType() == null) {
-                newUser.setBusinessType(User.BusinessType.INDIVIDUAL);
-            }
-
-            User savedUser = userService.registerUserWithFile(newUser, file);
-            return ResponseEntity.ok(savedUser);
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid Role or Business Type provided.");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Signup Error: " + e.getMessage());
+            User registeredUser = userService.registerUser(newUser);
+            return ResponseEntity.ok(registeredUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     // 3. LOGIN
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> data) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginData) {
+        String email = loginData.get("email");
+        String password = loginData.get("password");
         try {
-            User user = userService.loginUser(data.get("email"), data.get("password"));
+            User user = userService.loginUser(email, password);
             return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            return ResponseEntity.status(401).body(e.getMessage());
         }
     }
 
-    // 4. ADMIN: Get pending donors
-    @GetMapping("/pending-donors")
-    public ResponseEntity<List<User>> getPendingDonors() {
-        return ResponseEntity.ok(userService.getUsersByRoleAndApproval(User.Role.DONOR, false));
-    }
-
-    // 5. ADMIN: Approve donor
-    @PutMapping("/approve/{id}")
-    public ResponseEntity<?> approveDonor(@PathVariable Integer id) {
-        try {
-            return ResponseEntity.ok(userService.approveUser(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
-        }
-    }
-
-    /**
-     * 6. UPDATE PROFILE (FIXED)
-     * Handles both JSON (Standard updates) and Multipart (Profile Pic updates)
-     */
-    @PutMapping(value = "/update-profile/{id}")
-    public ResponseEntity<?> updateProfile(
-            @PathVariable Integer id, 
-            @RequestBody Map<String, String> data) { 
-        try {
-            // This handles the simple JSON update from your current frontend
-            User updatedUser = userService.updateProfileWithFile(id, data, null);
-            return ResponseEntity.ok(updatedUser);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Update Error: " + e.getMessage());
-        }
-    }
-
-    // Overloaded method to handle Multipart if you add a Profile Picture later
-    @PutMapping(value = "/update-profile/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> updateProfileWithFile(
-            @PathVariable Integer id, 
-            @RequestPart("userData") String userDataJson,
-            @RequestPart(value = "profilePic", required = false) MultipartFile file) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, String> data = mapper.readValue(userDataJson, new TypeReference<Map<String, String>>() {});
+    // 4. UPDATE PROFILE (Matches your yellow Profile Wireframe)
+    @PutMapping("/update-profile/{id}")
+    public ResponseEntity<?> updateProfile(@PathVariable Integer id, @RequestBody Map<String, String> profileData) {
+        return userService.getUserById(id).map(existingUser -> {
             
-            User updatedUser = userService.updateProfileWithFile(id, data, file);
+            if (profileData.containsKey("name")) {
+                existingUser.setName(profileData.get("name"));
+            }
+            if (profileData.containsKey("address")) {
+                existingUser.setAddress(profileData.get("address"));
+            }
+            if (profileData.containsKey("phone")) {
+                existingUser.setPhone(profileData.get("phone"));
+            }
+            
+            // Handling the Toggle: Donor vs Food Finder
+            if (profileData.containsKey("userType")) {
+                String type = profileData.get("userType"); 
+                if ("DONOR".equalsIgnoreCase(type)) {
+                    existingUser.setRole(User.Role.DONOR);
+                } else {
+                    existingUser.setRole(User.Role.CLAIMANT);
+                }
+            }
+            
+            User updatedUser = userService.registerUser(existingUser);
             return ResponseEntity.ok(updatedUser);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Update Error: " + e.getMessage());
-        }
+        }).orElse(ResponseEntity.notFound().build());
     }
 
-    // 7. DASHBOARD STATS
-    @GetMapping("/stats")
-    public ResponseEntity<Map<String, Long>> getAdminStats() {
+    // 5. STATS for Homepage [Y]
+    @GetMapping("/count")
+    public ResponseEntity<Map<String, Long>> getUserCount() {
         Map<String, Long> stats = new HashMap<>();
+        // This ensures the [Y] box on your homepage shows the real number from MySQL
         stats.put("totalUsers", userService.countTotalUsers());
         return ResponseEntity.ok(stats);
     }

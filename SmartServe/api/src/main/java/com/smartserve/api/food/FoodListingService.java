@@ -52,12 +52,4 @@ public class FoodListingService {
     public Optional<FoodListing> getFoodById(Integer id) {
         return foodRepository.findById(id);
     }
-    
-    // Inside FoodListingService.java
-public List<FoodListing> getAvailableDonations() {
-    return foodRepository.findByStatusAndListingType(
-        FoodListing.ListingStatus.AVAILABLE, 
-        FoodListing.ListingType.DONATION
-    );
-}
 }

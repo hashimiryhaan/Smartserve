@@ -1,6 +1,6 @@
 package com.smartserve.api.claims;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.smartserve.api.food.FoodListing;
 import com.smartserve.api.users.User;
 import jakarta.persistence.*;
@@ -16,20 +16,11 @@ public class Claim {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // The OTP column (Kept the one with constraints)
     @Column(nullable = false, length = 4)
     private String otp;
 
     @Enumerated(EnumType.STRING)
     private ClaimStatus status = ClaimStatus.PENDING;
-
-    // Tracks if this was a standard "USER" claim or a "CHARITY" rescue
-    @Column(name = "claimertype")
-    private String claimerType; 
-
-    // Denormalized name for faster rendering in the Donor Dashboard
-    @Column(name = "claimername")
-    private String claimerName;
 
     @Column(name = "claimedat", updatable = false)
     private LocalDateTime claimedAt = LocalDateTime.now(); 
@@ -37,20 +28,18 @@ public class Claim {
     @Column(name = "verifiedat")
     private LocalDateTime verifiedAt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    // FIX: Added @JsonIgnore here to break the infinite loop with FoodListing
+    @ManyToOne
     @JoinColumn(name = "foodid")
-    @JsonIgnoreProperties("claims") 
+    @JsonIgnore 
     private FoodListing food;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "claimantid")
-    // Added "foodListings" here just in case your User entity maps back to food!
-    @JsonIgnoreProperties({"claims", "password", "foodListings"}) 
+    @JsonIgnore
     private User claimant;
 
     public enum ClaimStatus {
         PENDING, VERIFIED, CANCELLED
     }
-    @Column(name = "claimed_quantity")
-    private Integer claimedQuantity;
 }

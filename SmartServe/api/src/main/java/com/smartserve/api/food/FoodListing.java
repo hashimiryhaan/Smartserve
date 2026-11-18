@@ -1,7 +1,6 @@
 package com.smartserve.api.food;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.smartserve.api.category.Category;
 import com.smartserve.api.claims.Claim;
 import com.smartserve.api.users.User;
@@ -23,14 +22,9 @@ public class FoodListing {
     @Column(nullable = false)
     private String title;
 
-    public String getTitle() {
-        return this.title;
-    }
-    
     private String description; 
 
-    @Column(nullable = false)
-    private Integer quantity;
+    private String quantity;
 
     @ManyToOne
     @JoinColumn(name = "categoryid") 
@@ -68,7 +62,7 @@ public class FoodListing {
 
     @ManyToOne
     @JoinColumn(name = "donorid")
-    @JsonIgnoreProperties({"password", "claims", "foodListings"}) // THE FIX 
+    @JsonIgnore 
     private User donor;
 
     // FIX: Added @JsonIgnore to prevent the infinite JSON loop with Claims
@@ -89,12 +83,5 @@ public class FoodListing {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-    @Enumerated(EnumType.STRING)
-    @Column(name = "listing_type")
-    private ListingType listingType = ListingType.SALE;
-
-    public enum ListingType {
-        SALE, DONATION
     }
 }
