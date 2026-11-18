@@ -9,7 +9,7 @@ import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*") 
+
 public class UserController {
 
     @Autowired

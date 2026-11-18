@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/food")
-@CrossOrigin(origins = "*") 
+
 public class FoodListingController {
 
     @Autowired

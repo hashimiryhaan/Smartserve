@@ -6,7 +6,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
-@CrossOrigin(origins = "*") // Allows your frontend to talk to this backend
+
 public class CategoryController {
 
     @Autowired
