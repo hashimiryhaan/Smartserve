@@ -1,4 +1,4 @@
-# SmartServe — Food Surplus Management Platform
+# SmartServe — Food Surplus Management Platform [ Third Year Academic Mini Project]
 
 ![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=flat-square&logo=springboot&logoColor=white)
